@@ -1,0 +1,42 @@
+# General
+.env
+.env.local
+*.log
+logs/
+**/.env
+
+
+# Node.js/Next.js (videoactive-client)
+videoactive-client/video-call/node_modules/
+videoactive-client/video-call/.next/
+videoactive-client/video-call/dist/
+videoactive-client/video-call/build/
+
+# ASP.NET Core (videoactive-server)
+videoactive-server/VideoActive/bin/
+videoactive-server/VideoActive/obj/
+videoactive-server/VideoActive/publish/
+videoactive-server/VideoActive/wwwroot/
+
+# AWS Lambda function
+videoactive-server/UploadImageLambda/src/UploadImageLambda/bin/
+videoactive-server/UploadImageLambda/src/UploadImageLambda/obj/
+videoactive-server/UploadImageLambda/test/UploadImageLambda.Tests/bin/
+videoactive-server/UploadImageLambda/test/UploadImageLambda.Tests/obj/
+
+# Sensitive settings
+videoactive-server/VideoActive/appsettings.json
+videoactive-server/VideoActive/secrets.json
+
+# IDE and Editor
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Docker-specific overrides (local)
+docker-compose.override.yml
+docker-compose.*.override.yml
+Dockerfile.*

@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    /* Ensure the body and html take full screen */
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* Make sure the iframe takes full screen */
+    .fullscreen-iframe {
+        position: absolute;
+        top: 1;
+        left: 1%;
+        right: 1%;
+        width: 98%;
+        height: 80%;
+    }
+</style>
+
+<div class="text-center">
+    <iframe class="fullscreen-iframe" 
+        src="https://grafana.api.kc123.me/d/fefmgkj2pe7swa/new-dashboard?orgId=1&theme=light&kiosk">
+    </iframe>
+</div>
