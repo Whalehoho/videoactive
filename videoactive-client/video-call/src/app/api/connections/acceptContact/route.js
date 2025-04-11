@@ -1,6 +1,18 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
+/**
+ * Handles POST requests to accept a contact request by interacting with the backend.
+ *
+ * This function performs the following actions:
+ * - Retrieves the AuthToken from the cookies to authenticate the request.
+ * - Extracts the `friendId` from the request body.
+ * - Sends a POST request to the backend to accept the contact request, passing the `friendId` and AuthToken for authorization.
+ * - If the backend responds with an error, returns an error response with the appropriate status.
+ * - If the request is successful, returns the result from the backend.
+ *
+ * @param {Request} req - The request object containing the HTTP request details, including the `friendId` in the body.
+ * @returns {NextResponse} A JSON response containing either the success result or an error message.
+ */
 export async function POST(req) {
     try {
         // const authToken = req.headers.get("Authorization")?.split(" ")[1];

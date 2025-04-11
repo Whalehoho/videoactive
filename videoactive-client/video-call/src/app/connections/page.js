@@ -9,6 +9,16 @@ import 'react-resizable/css/styles.css'; // Import the styles for the resizable 
 import { logStartCall, logEndCall } from "../services/api";
 
 
+  /**
+ * Renders the Connection page for the ViMeet application.
+ *
+ * This component displays:
+ * All online contacts and their status
+ * Manages WebSocket context variables for real-time communication
+ * Manages connection, signaling messages, and incoming data such as offers, answers, and ICE candidates.
+ *
+ * @returns {JSX.Element} The rendered About page component.
+ */
 export default function ConnectionPage() {
   const { 
     socketRef, 
@@ -23,6 +33,17 @@ export default function ConnectionPage() {
     messageHistory, setMessageHistory
   } = useWebSocket(); // Use WebSocket context instead of building a new one when visiting the page
   // these are the states for incoming calls, offer data, answer data, hang-up data, and ICE candidate data
+
+
+    /**
+   * State management for call details and message data
+   * - targetClientId: Stores the client ID of the selected contact for the current communication.
+   * - status: Stores the current status of the connection (e.g., idle, calling).
+   * - peerRef: Stores the WebRTC peer connection object.
+   * - local/remoteVideoRef: Stores references to the local and remote video streams.
+   * - localStreamRef/remoteStreamRef: References for media streams.
+   * - candidateQueue: A queue to store ICE candidates before establishing the peer connection.
+   */
   const [targetClientId, setTargetClientId] = useState(null);
   const targetClientIdRef = useRef(targetClientId);
   const [status, setStatus] = useState("idle");
@@ -33,28 +54,49 @@ export default function ConnectionPage() {
   const localStreamRef = useRef(null);
   const remoteStreamRef = useRef(null);
   const candidateQueue = useRef([]);
-
+  /**
+   * State for contacts and chat functionality
+   * - contacts: Holds the list of available contacts (both online and offline).
+   * - messageToSend: Stores the content of the message that is being typed or about to be sent.
+   */
   const [contacts, setContacts] = useState([]);
   const [messageToSend, setMessageToSend] = useState("");
  
-
+  /**
+   * Router and user state management
+   * - router: For navigation control.
+   * - user: Stores the logged-in user data.
+   * - loading: Indicates whether the user data is still being loaded.
+   * - search: Stores the search term for filtering contacts.
+   */
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  //these state variables for chatbox
+  /**
+   * Chat box visibility and scrolling management
+   * - showChatBox: Boolean to control whether the chat box is visible.
+   * - messagesEndRef: A reference to handle scrolling behavior to the latest message.
+   */
   const [showChatBox, setShowChatBox] = useState(true);
   const messagesEndRef = useRef(null);
 
-  //  this useEffect to handle scrolling to the latest message
+  /**
+   * Effect hook for scrolling to the latest message when message history updates
+   * - This effect runs when new messages are added to the message history, ensuring the chat box always shows the most recent messages.
+   */
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
     }
   }, [messageHistory,showChatBox ]);
 
-  // Also add this effect to show chat box when a new message arrives
+  /**
+   * Effect hook to show chat box when a new message arrives
+   * - This effect is triggered when a new message is received from the selected contact.
+   * - It ensures that the chat box becomes visible when there is a new message.
+   */
   useEffect(() => {
     // If a new message arrives from the selected contact
     const hasNewMessage = messageHistory.some(
@@ -65,7 +107,13 @@ export default function ConnectionPage() {
       setShowChatBox(true);
     }
   }, [messageHistory, targetClientId]);
-  // Also modify the contact click handler to show chat when a contact is selected
+
+  /**
+   * Handler for when a contact is clicked
+   * - Sets the target client ID to the selected contact.
+   * - Shows the chat box and scrolls to the latest message.
+   * @param {string} contactId - The ID of the selected contact.
+   */
   const handleContactClick = (contactId) => {
     setTargetClientId(contactId);
     targetClientIdRef.current = contactId;
@@ -80,6 +128,11 @@ export default function ConnectionPage() {
   };
   
 
+  /**
+   * ICE servers configuration
+   * - Defines STUN and TURN servers to be used for establishing peer-to-peer connections.
+   * - Uses public STUN servers from Google and custom TURN servers if available.
+   */
   const iceServers = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
@@ -112,6 +165,10 @@ export default function ConnectionPage() {
     console.log("Message history: ", messageHistory);
   }, [messageHistory]);
 
+   /**
+   * Effect hook to fetch the user data on component mount
+   * - Fetches user data from the server, and if the user is not authenticated, redirects to the login page.
+   */
   useEffect(() => {
     fetchUser().then((data) => {
       if (!data) {
@@ -123,6 +180,10 @@ export default function ConnectionPage() {
     });
   }, []);
 
+  /**
+   * Effect hook to fetch contacts from the server
+   * - Retrieves both online and offline contacts and stores them in the contacts state.
+   */
   useEffect(() => {
     //fetch contacts from the server (both online and offline)
     const fetchContactsData = async () => {
@@ -135,7 +196,10 @@ export default function ConnectionPage() {
     };
     fetchContactsData();
   }, []);
-
+  /**
+   * Cleanup effect on component unmount
+   * - Handles necessary cleanup tasks such as hanging up calls.
+   */
   useEffect(() => {
     // This cleanup function will run when component unmounts
     return () => {
@@ -144,8 +208,12 @@ export default function ConnectionPage() {
     };
   }, []); // Empty dependency array means this runs only on mount/unmount
 
-  //When receiving an incoming answer
-  useEffect(() => {
+  /**
+   * Effect hook to handle incoming answer data
+   * - Sets the remote description for the peer connection when an answer is received.
+   * - Processes any queued ICE candidates after the remote description is set.
+   */
+    useEffect(() => {
     if (!answerData) {
       return;
     }
@@ -161,7 +229,10 @@ export default function ConnectionPage() {
     handleAnswer(answerData.signalData);
   }, [answerData]);
 
-  //When receving a hang-up signal
+  /**
+   * Effect hook to handle hang-up signals
+   * - Ends the call when a hang-up signal is received.
+   */
   useEffect(() => {
     if (!hangUpData) {
       return;
@@ -169,12 +240,15 @@ export default function ConnectionPage() {
     hangUp();
   }, [hangUpData]);
 
-  //When receiving an incoming ICE candidate
-  useEffect(() => {
+  /**
+   * Effect hook to handle incoming ICE candidates
+   * - Adds ICE candidates to the peer connection if they are received.
+   */
+    useEffect(() => {
     if (!iceCandidateData) {
       return;
     }
-  
+    
     const handleIceCandidate = async (message) => {
       // Candidate must be added after setting remote description
       if (!peerRef.current) {
@@ -201,7 +275,9 @@ export default function ConnectionPage() {
     handleIceCandidate(iceCandidateData);
   }, [iceCandidateData]);
   
-  // Process queued ICE candidates after setting remote description
+  /**
+    * Processes queued ICE candidates that were received before setting remote description.
+  */
   const processQueuedCandidates = async () => {
     if (!peerRef.current || !peerRef.current.remoteDescription) {
       console.warn("Cannot process ICE candidates: Remote description not set.");
@@ -224,7 +300,9 @@ export default function ConnectionPage() {
         .catch(error => console.error("Error adding queued ICE candidate:", error));
     }
   };
-
+/**
+   * Initiates a call by creating the peer connection and sending an offer.
+   */
   const startCall = async () => {
     try{
       if(!targetClientId) return;
@@ -237,7 +315,9 @@ export default function ConnectionPage() {
       console.error(error);
     }
   };
-
+  /**
+   * Answers an incoming call by setting the remote offer, processing ICE candidates, and sending an answer.
+   */
   const answerCall = async () => {
     try {
       if(!targetClientId) return;
@@ -266,7 +346,9 @@ export default function ConnectionPage() {
       console.error(error);
     }
   };
-
+ /**
+   * Terminates the call, cleans up peer and media resources, and notifies the other peer.
+   */
   const hangUp = async () => {
     if(statusRef.current === "idle") {
       console.log("No active call to hang up.");
@@ -309,7 +391,9 @@ export default function ConnectionPage() {
 
   };
 
-  // Modified getLocalMedia to return the stream
+ /**
+   * Requests access to user's media devices (camera and microphone) and returns the stream.
+   */
   const getLocalMedia = async () => {
     try {
     if (!localStreamRef.current) {
@@ -328,7 +412,9 @@ export default function ConnectionPage() {
     }
   };
 
-  // Create peer connection and add media tracks
+  /**
+   * Initializes the RTCPeerConnection, adds local media tracks, and sets up event handlers.
+   */
   const createPeerConnection = async () => {
     if(!localStreamRef.current) {
       console.log("Local media stream not available. Fetching...");
@@ -397,7 +483,9 @@ export default function ConnectionPage() {
   };
 
 
-  // Create an offer
+  /**
+   * Creates an SDP offer and sends it to the target client.
+   */
   const createOffer = async () => {
     console.log('socketRef: ', socketRef);
     try {
@@ -417,7 +505,9 @@ export default function ConnectionPage() {
   };
 
 
-  // Create an answer
+  /**
+   * Creates an SDP answer and sends it back to the caller.
+   */
   const createAnswer = async () => {
       try {
           const answer = await peerRef.current.createAnswer();

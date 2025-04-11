@@ -1,6 +1,21 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+/**
+ * Handles POST requests to upload an image for user profile.
+ *
+ * This function performs the following actions:
+ * - Retrieves the uploaded file from the form data.
+ * - Checks for the presence of the file and returns a 400 error if no file is uploaded.
+ * - Retrieves the AuthToken from cookies to authenticate the request.
+ * - If the AuthToken is missing, returns a 401 error indicating the unauthorized request.
+ * - Forwards the request to the backend to update the user's image.
+ * - Returns the backend's response, which includes the URL of the uploaded image.
+ *
+ * @param {Request} req - The request object containing the HTTP request details and form data.
+ * @returns {NextResponse} A JSON response with the uploaded image URL or an error message.
+ */
+
 export async function POST(req) {
   try {
     const formData = await req.formData();
@@ -8,8 +23,6 @@ export async function POST(req) {
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
-
-    // const authToken = req.headers.get("Authorization")?.split(" ")[1];
 
     // Get AuthToken from cookies
     const cookieStore = await cookies();

@@ -1,6 +1,19 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
+/**
+ * Handles POST requests to update the user's information.
+ *
+ * This function performs the following actions:
+ * - Retrieves the AuthToken from the cookies.
+ * - Logs the received request method and the AuthToken for debugging purposes.
+ * - If the AuthToken is missing, returns a 401 error indicating the missing token.
+ * - Reads the request body and logs it for debugging purposes.
+ * - Sends a POST request to the backend API to update the user's information.
+ * - Returns the response from the backend with the updated user data or an error message if the operation fails.
+ *
+ * @param {Request} req - The request object containing the HTTP request details.
+ * @returns {NextResponse} A JSON response with the updated user data or an error message.
+ */
 export async function POST(req) {
   try {
     // const authToken = req.headers.get("Authorization")?.split(" ")[1];

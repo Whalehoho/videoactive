@@ -1,7 +1,5 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
-export async function GET(req) {
   /**
    * Handles GET requests to fetch user information using an AuthToken stored in cookies.
    *
@@ -15,6 +13,8 @@ export async function GET(req) {
    * @param {Request} req - The request object containing the HTTP request details.
    * @returns {NextResponse} A JSON response containing either user data or error information.
    */
+export async function GET(req) {
+
   try {
     // const authToken = req.headers.get("Authorization")?.split(" ")[1];
 

@@ -1,3 +1,13 @@
+/**
+ * Footer component that renders the footer section of the website.
+ *
+ * This component performs the following actions:
+ * - Displays the logo, the platform's name, and a brief description of the service.
+ * - Includes a copyright notice with the current year.
+ * - Provides social media links (X, Instagram, YouTube, LinkedIn) with corresponding logos.
+ *
+ * @returns {JSX.Element} The rendered Footer component.
+ */
 export default function Footer() {
   return (
     <footer className="bg-gray-100 p-6  mx-2">

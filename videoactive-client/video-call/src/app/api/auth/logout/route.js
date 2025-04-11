@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-
+/**
+ * Handles POST requests to log out the user by invalidating their session and deleting the AuthToken cookie.
+ *
+ * This function performs the following actions:
+ * - Retrieves the AuthToken from the cookies.
+ * - If the AuthToken exists, sends a request to the backend to invalidate the session.
+ * - Deletes the AuthToken cookie by setting its expiration date to the past.
+ * - Returns a JSON response indicating successful logout, or an error if something goes wrong.
+ *
+ * @returns {NextResponse} A JSON response confirming the logout or an error response in case of failure.
+ */
 export async function POST() {
   try {
     console.log("Logout API called");
@@ -28,7 +38,7 @@ export async function POST() {
       value: "",
       path: "/",
       expires: new Date(0),
-      domain: ".kc123.me",
+      domain: ".kc123.me", // Uncomment if needed for subdomain access
     });
 
     console.log("AuthToken cookie deleted");

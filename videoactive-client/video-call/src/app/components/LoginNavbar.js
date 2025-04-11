@@ -1,5 +1,18 @@
 import Link from "next/link";
 
+/**
+ * Navbar component that renders the top navigation bar of the website.
+ *
+ * This component performs the following actions:
+ * - Displays the logo of the platform.
+ * - Includes navigation links for Home and About Us pages.
+ * - Highlights the active page by changing the link styles dynamically.
+ * - Provides a Sign-in/Register button that redirects to the authentication page.
+ *
+ * @param {Object} props - The props passed to the component.
+ * @param {string} props.activePage - The currently active page to highlight in the navigation.
+ * @returns {JSX.Element} The rendered Navbar component.
+ */
 export default function Navbar({ activePage }) {
   return (
     <nav className="bg-white/60  shadow-md p-4 flex justify-between items-center fixed top-0 left-0 w-full z-50">

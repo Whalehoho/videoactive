@@ -4,7 +4,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { handleLogout } from "../services/api";
 import { useWebSocket } from "../context/WebSocketContext";
-
+/**
+ * Navbar component that displays navigation links and user interaction options.
+ *
+ * This component performs the following actions:
+ * - Displays a logo that redirects to the home page when clicked.
+ * - Displays navigation links for Home, Random Call, Connections, and Profile.
+ * - Provides an option for the user to log out and redirect to the home page.
+ * - Shows an indicator for incoming calls if there are any.
+ * - Handles the visibility of the navbar with a fade-in effect after a slight delay.
+ *
+ * @param {Object} props - The props passed to the component.
+ * @param {string} props.activePage - The current active page to highlight the respective link.
+ * @param {Object} props.user - The user object containing user information.
+ * @param {function} props.onLogout - The function to trigger when logging out the user.
+ * @returns {JSX.Element} The rendered Navbar component.
+ */
 export default function Navbar({ activePage, user, onLogout }) { 
   const [navbarVisible, setNavbarVisible] = useState(false); // Track navbar visibility
   const router = useRouter();
@@ -18,11 +33,16 @@ export default function Navbar({ activePage, user, onLogout }) {
     router.push("/"); // Redirect to home after logout
   };
   
+  /**
+   * Handles navigation to the random call page when the logo is clicked.
+   */
   const handleClick = () => {
     router.push("/randomCall"); // Navigate to randomCall page
   };
 
-  // Set navbar to be visible after data fetch or a slight delay
+  /**
+   * Set navbar to be visible after data fetch or a slight delay
+   */
   useEffect(() => {
     const timer = setTimeout(() => {
       setNavbarVisible(true); // Make navbar visible after a short delay
