@@ -8,7 +8,20 @@ import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css'; // Import the styles for the resizable component
 import { resolve } from "styled-jsx/css";
 
-// Random call does not use WebSocketContext because unlike direct call, we only need to establish a connection when starting a call
+/**
+ * Handles the randomized video connection page for ViMeet.
+ * 
+ * This component allows authenticated users to participate in anonymous 1-on-1 WebRTC video calls.
+ * It handles the WebSocket signaling, peer connection setup, ICE candidates, and call lifecycle management.
+ *
+ * Main features include:
+ * - Fetching user data and authentication token
+ * - Establishing WebSocket signaling for random matching
+ * - Managing call status (searching, connected, disconnected)
+ * - Cleaning up media streams and peer connections
+ *
+ * @returns {JSX.Element} The rendered ConnectionPage component.
+ */
 export default function ConnectionPage() {
   const socketRef = useRef(null);
   const [authToken, setAuthToken] = useState(null);
@@ -36,9 +49,13 @@ export default function ConnectionPage() {
   const pingIntervalRef = useRef(null);
 
 
-  // ICE serves help establish a connection between peers by bypassing NAT and firewalls
-  // STUN servers help find the public IP address of a user
-  // TURN servers help relay media if direct connection fails, consumes more bandwidth, and is slower
+
+  /**
+ * ICE serves help establish a connection between peers by bypassing NAT and firewalls
+ * STUN servers help find the public IP address of a user
+ * This component allows authenticated users to participate in anonymous 1-on-1 WebRTC video calls.
+ * TURN servers help relay media if direct connection fails, consumes more bandwidth, and is slower
+ */
   const iceServers = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
@@ -56,7 +73,11 @@ export default function ConnectionPage() {
     ],
   };
   
-
+/**
+ * useEffect - Fetches and verifies the current user on component mount.
+ * 
+ * Redirects unauthenticated users to the login page.
+ */
   useEffect(() => {
     fetchUser().then((data) => {
       if (!data) {
@@ -69,6 +90,9 @@ export default function ConnectionPage() {
     });
   }, []);
 
+/**
+ * useEffect - Fetches WebSocket auth token once user data is available.
+ */
   useEffect(() => {
     if (!user) return;
     const fetchToken = async () => {
@@ -79,7 +103,9 @@ export default function ConnectionPage() {
   };
     fetchToken();
   }, [user]);
-
+/**
+ * useEffect - Cleans up peer connection and media streams on component unmount.
+ */
   useEffect(() => {
     // This cleanup function will run when component unmounts
     return () => {
@@ -89,7 +115,15 @@ export default function ConnectionPage() {
   }, []); // Empty dependency array means this runs only on mount/unmount
 
 
-
+/**
+ * Initiates a new random video call.
+ * 
+ * Steps:
+ * 1. Sets call status to "searching"
+ * 2. Gets local media stream
+ * 3. Connects to backend WebSocket server
+ * 4. Starts listening for signaling messages and pinging the server to keep connection alive
+ */
   const startCall = async () => {
     if (!authToken) {
       console.error("Auth token not available.");
@@ -144,7 +178,12 @@ export default function ConnectionPage() {
       hangUp();
     }
   };
-
+/**
+ * Ends the current call and performs a full cleanup.
+ * 
+ * Resets state, closes peer and socket connections,
+ * stops media tracks, clears timers, and resets local storage.
+ */
   const hangUp = () => {
     setStatus("disconnected");
     setContactStatus("none");
@@ -203,7 +242,16 @@ export default function ConnectionPage() {
 
   };
 
-  // Handle incoming WebSocket messages
+/**
+ * Handles all incoming messages from the signaling WebSocket.
+ * 
+ * Dispatches messages to appropriate handlers:
+ * - match-found
+ * - signal (offer/answer/ICE)
+ * - peer-disconnected
+ * 
+ * @param {Object} message - WebSocket message received
+ */
   const handleMessage = (message) => {
     switch (message.type) {
       case 'match-found':
@@ -222,7 +270,14 @@ export default function ConnectionPage() {
     }
   };
 
-  // Handle a match found message
+/**
+ * Handles the 'match-found' message received from the WebSocket server.
+ * 
+ * Stores the pair ID and role, sets the status to 'connected', 
+ * and initiates WebRTC connection if the user is the caller.
+ *
+ * @param {Object} message - Match details containing pair ID and user role.
+ */
   const handleMatchFound = async (message) => {
     console.log("Match found with pair ID: ", message.pairId);
     setPairID(message.pairId);
@@ -237,7 +292,12 @@ export default function ConnectionPage() {
     }
   };
 
-  // Create peer connection and add media tracks
+  /**
+ * Creates and configures a new RTCPeerConnection.
+ * 
+ * Adds local media tracks, sets up ontrack handler for incoming streams,
+ * and configures ICE candidate handling.
+ */
   const createPeerConnection = async () => {
     if (!localStreamRef.current) {
       await getLocalMedia();
@@ -301,7 +361,9 @@ export default function ConnectionPage() {
     };
   };
 
-  // Create an offer
+  /**
+ * Creates a WebRTC offer and sends it to the peer through the signaling server.
+ */
   const createOffer = async () => {
     // console.log('socketRef: ', socketRef);
     try {
@@ -320,7 +382,13 @@ export default function ConnectionPage() {
     }
   };
 
-  // Modified getLocalMedia to return the stream
+  /**
+ * Gets local media stream from user's camera and microphone.
+ * 
+ * Assigns the stream to the local video ref and stores it in localStreamRef.
+ *
+ * @returns {MediaStream} The local media stream
+ */
   const getLocalMedia = async () => {
     try {
       if (!localStreamRef.current) {
@@ -339,7 +407,12 @@ export default function ConnectionPage() {
     }
   };
 
-  // Send signaling message to the server
+  /**
+ * Sends a signaling message to the WebSocket server.
+ * 
+ * @param {string} type - The type of signal ('offer', 'answer', 'ice-candidate', etc.)
+ * @param {Object} signal - The actual signal data
+ */
   const sendSignalingMessage = (type, signal) => {
     const message = {
       type: 'signal',
@@ -356,7 +429,18 @@ export default function ConnectionPage() {
     }
   };
 
-  // Handle incoming signaling messages
+  /**
+ * Handles incoming signaling messages from the peer via WebSocket.
+ * 
+ * Dispatches based on signalType:
+ * - 'offer': Sets up remote offer
+ * - 'answer': Sets up remote answer
+ * - 'ice-candidate': Adds ICE candidate
+ * - 'contact-request': Handles incoming contact request
+ * - 'accept-request': Handles acceptance of contact request
+ *
+ * @param {Object} message - The signaling message
+ */
   const handleSignalingMessage = (message) => {
     console.log("Signal received: ", message);
     switch (message.signalType) {
@@ -381,7 +465,9 @@ export default function ConnectionPage() {
     }
   };
 
-  //When receiving an incoming ICE candidate
+  /**
+ * Monitors for newly received ICE candidates and adds them to the connection.
+ */
   useEffect(() => {
     if (!iceCandidateData) {
       return;
@@ -412,7 +498,14 @@ export default function ConnectionPage() {
     handleIceCandidate(iceCandidateData);
   }, [iceCandidateData]);
   
-  // Process queued ICE candidates after setting remote description
+  /**
+ * Processes any ICE candidates that were received before the remote description was set.
+ * Ensures they are added after the remote description to prevent negotiation errors.
+ * 
+ * @async
+ * @function processQueuedCandidates
+ * @returns {Promise<void>}
+ */
   const processQueuedCandidates = async () => {
     if (!peerRef.current || !peerRef.current.remoteDescription) {
       console.warn("Cannot process ICE candidates: Remote description not set.");
@@ -436,12 +529,21 @@ export default function ConnectionPage() {
     }
   };
 
-  // Handle an incoming offer
+  /**
+ * Handles an incoming offer from the remote peer.
+ * Stores the offer so it can be processed by the effect hook.
+ * 
+ * @function handleOffer
+ * @param {RTCSessionDescriptionInit} offer - The offer SDP object received from signaling.
+ */
   const handleOffer = async (offer) => {
     console.log("Offer received: ", offer);
     setOfferData(offer); // Handle the offer in the useEffect hook to ensure the offer is set before creating the answer
   };
-
+/**
+ * Effect hook to process stored offer data once it's set.
+ * Ensures the media and peer connection are ready before responding.
+ */
   useEffect(() => {
     if (!offerData) {
       return;
@@ -449,7 +551,19 @@ export default function ConnectionPage() {
     processOffer(offerData);
   }, [offerData]);
 
-  // Process offer
+  /**
+ * Handles processing of an incoming offer:
+ * - Gets local media
+ * - Creates the peer connection
+ * - Sets the remote description
+ * - Processes ICE candidates
+ * - Creates and sends an answer
+ * 
+ * @async
+ * @function processOffer
+ * @param {RTCSessionDescriptionInit} offerData - The offer SDP to respond to.
+ * @returns {Promise<void>}
+ */
   const processOffer = async (offerData) => {
     await getLocalMedia();
     await createPeerConnection();
@@ -459,7 +573,14 @@ export default function ConnectionPage() {
     await createAnswer();
   };
 
-  // Create an answer
+  /**
+ * Creates and sends an answer to the remote peer.
+ * Sets the local description and emits it via the signaling server.
+ * 
+ * @async
+ * @function createAnswer
+ * @returns {Promise<void>}
+ */
   const createAnswer = async () => {
     try {
       const answer = await peerRef.current.createAnswer();
@@ -471,11 +592,20 @@ export default function ConnectionPage() {
     }
   };
 
-  //When receiving an incoming answer
+/**
+ * Effect hook that responds to incoming answers from the signaling server.
+ * Applies the remote description and processes any queued ICE candidates.
+ */
   useEffect(() => {
     if (!answerData) {
       return;
     }
+    /**
+   * Applies the remote description using the received answer.
+   * 
+   * @async
+   * @param {RTCSessionDescriptionInit} message - The received answer SDP.
+   */
     const handleAnswer = async (message) => {
       await peerRef.current.setRemoteDescription(new RTCSessionDescription(message))
         .catch(error => {
@@ -487,7 +617,15 @@ export default function ConnectionPage() {
     handleAnswer(answerData.signalData);
   }, [answerData]);
 
-  // Handle an incoming answer
+  /**
+ * Explicitly handles the setting of remote description using an answer.
+ * Called when the answer is directly available (not from useEffect).
+ * 
+ * @async
+ * @function handleAnswer
+ * @param {RTCSessionDescriptionInit} message - The answer SDP object.
+ * @returns {Promise<void>}
+ */
   const handleAnswer = async (message) => {
     console.log("Answer received: ", message);
     // setAnswerData(message);
@@ -499,7 +637,13 @@ export default function ConnectionPage() {
       await processQueuedCandidates();
   };
 
-  // Handle contact request
+  /**
+ * Handles an incoming contact request from a peer.
+ * Stores the client ID and opens a confirmation modal.
+ * 
+ * @function handleContactRequest
+ * @param {{ clientId: string }} message - The contact request message.
+ */
   const handleContactRequest = (message) => {
     console.log("Contact request received: ", message);
     const { clientId } = message;
@@ -507,21 +651,42 @@ export default function ConnectionPage() {
     setIsModalOpen(true);
   };
 
-  // Handle accept request
+  /**
+ * Handles an accept-request message from the peer.
+ * Updates the UI to reflect contact status.
+ * 
+ * @function handleAcceptRequest
+ * @param {Object} message - Accept request message (structure may vary).
+ */
   const handleAcceptRequest = (message) => {
     setContactStatus("accepted");
   };
 
+/**
+ * Sends a contact request to the connected peer via the signaling channel.
+ * 
+ * @function sendContactRequest
+ */
   const sendContactRequest = () => {
     sendSignalingMessage('contact-request', { clientId: user.uid });
     setContactStatus("pending");
   };
-
+/**
+ * Handles modal close by clearing pending friend state.
+ * 
+ * @function handleModalClose
+ */
   const handleModalClose = () => {
     setIsModalOpen(false);
     setPendingFriendId(null);
   };
-
+/**
+ * Confirms the contact request via modal interaction.
+ * Sends accept-request signal after adding the contact locally.
+ * 
+ * @async
+ * @function handleModalConfirm
+ */
   const handleModalConfirm = () => {
     if (pendingFriendId) {
       acceptContactRequest(pendingFriendId).then(() => {

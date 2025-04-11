@@ -1,7 +1,20 @@
-// calling frontend internal api routes from here and exporting them to be used in components
+/**
+ * This file contains all the API calls to the backend server. It will be used in every page for authentication and other API calls.
+ */
 
+/**
+ * The URL for redirecting users to the Google login page on the authentication page.
+ * 
+ * @constant {string}
+ */
 export const loginRedirectUrl = "/api/auth/login"; // will be used in auth page to redirect to google login page
 
+/**
+ * Fetches an authentication token from the backend API.
+ * 
+ * @async
+ * @returns {Promise<Object|null>} The auth token response in JSON format, or null if an error occurs.
+ */
 export async function fetchAuthToken() {
   try {
     const response = await fetch("/api/auth/token", {
@@ -20,6 +33,12 @@ export async function fetchAuthToken() {
   }
 }
 
+/**
+ * Logs out the current user by sending a request to the backend API to invalidate the session.
+ * 
+ * @async
+ * @returns {Promise<void>}
+ */
 export async function handleLogout() { //this function will handle logout
   await fetch("/api/auth/logout", {
     method: "POST",
@@ -27,6 +46,13 @@ export async function handleLogout() { //this function will handle logout
   });
 }
 
+/**
+ * Fetches user data by validating the token and returning the user information.
+ * This function is used in pages for authentication.
+ * 
+ * @async
+ * @returns {Promise<Object|null>} The user data if authenticated, or null if authentication fails.
+ */
 export async function fetchUser() {// this function will validate token and return user data and will be used in every page for authentication
   try {
     const response = await fetch("/api/auth/getUser", {
@@ -45,6 +71,13 @@ export async function fetchUser() {// this function will validate token and retu
   }
 }
 
+/**
+ * Updates the user profile data on the backend server.
+ * 
+ * @async
+ * @param {Object} data - The user profile data to update.
+ * @returns {Promise<Object|null>} The updated user profile data, or null if the update fails.
+ */
 export async function updateUser(data) { // this function will call frontend server to call backend to update user data in profile page
   try {
     const response = await fetch("/api/user/updateProfile", {
@@ -67,6 +100,13 @@ export async function updateUser(data) { // this function will call frontend ser
   }
 }
 
+/**
+ * Uploads an image file to the backend server.
+ * 
+ * @async
+ * @param {File} file - The image file to be uploaded.
+ * @returns {Promise<Object|null>} The uploaded image data (e.g., URL), or null if the upload fails.
+ */
 export async function uploadImage(file) { // this function specifically seperated in profile page to upload image.
   // console.log("Sending request to Next.js API:", file);
   const formData = new FormData();
@@ -90,6 +130,12 @@ export async function uploadImage(file) { // this function specifically seperate
   }
 }
 
+/**
+ * Fetches the user's contact list from the backend API.
+ * 
+ * @async
+ * @returns {Promise<Array|null>} The contact list, or null if the request fails.
+ */
 export async function fetchContacts() {// this function will validate token and return user data and will be used in every page for authentication
   try {
     const response = await fetch("/api/connections/getContacts", {
@@ -107,6 +153,13 @@ export async function fetchContacts() {// this function will validate token and 
   }
 }
 
+/**
+ * Sends a contact request to add a user as a friend.
+ * 
+ * @async
+ * @param {string} friendId - The ID of the user to add as a contact.
+ * @returns {Promise<Object|null>} The result of the request, or null if it fails.
+ */
 export async function addContactRequest(friendId) { // this function used on random call page to allow users to add other user as friends
   try {
     const response = await fetch("/api/addContact", {
@@ -129,7 +182,13 @@ export async function addContactRequest(friendId) { // this function used on ran
   }
 }
 
-
+/**
+ * Accepts a contact request and adds the user to the contact list.
+ * 
+ * @async
+ * @param {string} friendId - The ID of the friend to accept.
+ * @returns {Promise<Object|null>} The result of the accept request, or null if it fails.
+ */
 export async function acceptContactRequest(friendId) {
   try {
     const response = await fetch("/api/connections/acceptContact", {
@@ -152,6 +211,13 @@ export async function acceptContactRequest(friendId) {
   }
 }
 
+/**
+ * Rejects a contact request.
+ * 
+ * @async
+ * @param {string} friendId - The ID of the friend whose request is to be rejected.
+ * @returns {Promise<Object|null>} The result of the reject request, or null if it fails.
+ */
 export async function rejectContactRequest(friendId) {
   try {
     const response = await fetch("/api/rejectContact", {
@@ -174,6 +240,16 @@ export async function rejectContactRequest(friendId) {
   }
 }
 
+
+/**
+ * Inserts a message into the backend database and sends it to the recipient.
+ * 
+ * @async
+ * @param {string} messageText - The content of the message.
+ * @param {string} senderId - The ID of the message sender.
+ * @param {string} receiverId - The ID of the message receiver.
+ * @returns {Promise<Object|null>} The result of the message insert operation, or null if it fails.
+ */
 export async function insertMessage(messageText, senderId, receiverId) {
   try {
     const response = await fetch("/api/message/addMessage", {
@@ -196,6 +272,12 @@ export async function insertMessage(messageText, senderId, receiverId) {
   }
 }
 
+/**
+ * Fetches all messages between the current user and others.
+ * 
+ * @async
+ * @returns {Promise<Array|null>} The list of messages, or null if fetching fails.
+ */
 export async function fetchMessages() {
   try {
     const response = await fetch("/api/message/getMessages", {
@@ -213,6 +295,15 @@ export async function fetchMessages() {
   }
 }
 
+/**
+ * Logs the start of a call between two users.
+ * 
+ * @async
+ * @param {string} callerId - The ID of the calling user.
+ * @param {string} calleeId - The ID of the user being called.
+ * @param {string} callType - The type of call (e.g., "video", "voice").
+ * @returns {Promise<Response|null>} The response from the backend or null if an error occurs.
+ */
 export async function logStartCall(callerId, calleeId, callType) {
   try{
     console.log("CallerId: ", callerId);
@@ -235,6 +326,14 @@ export async function logStartCall(callerId, calleeId, callType) {
   }
 }
 
+/**
+ * Logs the end of a call between two users.
+ * 
+ * @async
+ * @param {string} callerId - The ID of the calling user.
+ * @param {string} calleeId - The ID of the user who was called.
+ * @returns {Promise<Response|null>} The response from the backend or null if an error occurs.
+ */
 export async function logEndCall(callerId, calleeId) {
   try{
     const response = await fetch("/api/logs/endCall", {

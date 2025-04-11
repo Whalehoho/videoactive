@@ -4,17 +4,26 @@ import "./globals.css";
 import NavbarSwitcher from "./components/NavbarSwitcher";
 import Footer from "./components/Footer";
 import { WebSocketProvider } from "./context/WebSocketContext";
-
+/**
+ * Load Geist Sans font and attach it to a CSS variable for use throughout the app.
+ */
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
+/**
+ * Load Geist Mono font and attach it to a CSS variable for use throughout the app.
+ */
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
+/**
+ * Global metadata configuration for the application.
+ * Includes title, favicon, theme color, and PWA manifest file.
+ */
 export const metadata = {
   title: "ViMeet",
   icons: [
@@ -29,6 +38,15 @@ export const metadata = {
   themeColor: "#ffffff",
 };
 
+/**
+ * Root layout component that wraps the entire application.
+ * Includes font styles, global context providers, navigation bar, footer, and page content.
+ *
+ * @component
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - The child components to render within the layout.
+ * @returns {JSX.Element} The HTML structure of the application layout.
+ */
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

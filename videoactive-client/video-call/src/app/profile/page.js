@@ -2,7 +2,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchUser, updateUser, uploadImage } from "../services/api";
-
+  /**
+ * Renders the profile page for the ViMeet application.
+ *
+ * This component displays:
+ * the user profile details for authenticated users,
+ * including a form to update user information including username, description and images.
+ * It advised user to submit images belox 400*400px.
+ *
+ * @returns {JSX.Element} The rendered About page component.
+ */
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
@@ -14,7 +23,11 @@ export default function ProfilePage() {
   const [image, setImage] = useState(null); // Local preview
   const [imageFile, setImageFile] = useState(null); // File to send
   const [updating, setUpdating] = useState(false);
-
+/**
+   * On initial render, fetch user data.
+   * If unauthenticated, redirect to /auth.
+   * Otherwise, populate form with user details.
+   */
   useEffect(() => {
     fetchUser().then((info) => {
       console.log(info)
@@ -32,7 +45,10 @@ export default function ProfilePage() {
       setLoading(false);
     });
   }, []);
-  // Handle image selection
+  /**
+   * Handle file selection for profile image upload.
+   * Validates file type and previews image.
+   */
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -46,7 +62,11 @@ export default function ProfilePage() {
       setImageFile(file);
     }
   };
-
+/**
+   * Submits the updated user data to the backend.
+   * If an image is selected, it will be uploaded before sending the update.
+   * Displays alert messages based on outcome.
+   */
   const handleUpdateUser = async () => {
     setUpdating(true);
 
@@ -88,12 +108,16 @@ export default function ProfilePage() {
 
     setUpdating(false);
   };
-
+/**
+   * Render loading screen while user data is loading.
+   */
   if (loading || !user) {
     return <div className="flex items-center justify-center min-h-screen text-pink-500">Loading...</div>;
   }
   if (!user) return null;
-
+/**
+   * Render the profile page form for authenticated users.
+   */
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-grow flex flex-col items-center justify-center px-10 py-10">

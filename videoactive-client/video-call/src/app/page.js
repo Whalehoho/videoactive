@@ -1,8 +1,15 @@
 "use client";
 import NavbarSwitcher from "./components/NavbarSwitcher";
 import Link from "next/link";
-
-export default function Home() {
+/**
+ * landing page page component of the ViMeet application.
+ * Displays a hero section with background image and overlay text,
+ * followed by a responsive image grid.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered landing page layout.
+ */
+export default function landing() {
   return (
     <div>
       {/* <NavbarSwitcher /> */}

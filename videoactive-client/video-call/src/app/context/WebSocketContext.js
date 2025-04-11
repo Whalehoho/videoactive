@@ -5,13 +5,25 @@ import { useRouter } from "next/navigation";
 import { fetchUser, fetchAuthToken, fetchMessages } from "../services/api";
 import { usePathname } from "next/navigation";
 
-
+/**
+ * Initializes a React Context to manage WebSocket connections and signaling for direct calling.
+ * This context handles:
+ *  - Establishing the WebSocket connection
+ *  - Managing online contacts
+ *  - Handling incoming/outgoing calls
+ *  - Receiving real-time messages
+ */
 const WebSocketContext = createContext(null);
 
-// WebSocket Context Provider is to establish a connection with the WebSocket server since user login. To:
-// 1. Notify server of user's online status
-// 2. Receive incoming calls
-// 3. Send and receive signaling messages for Direct calls
+/**
+ * Provides WebSocket connection functionality to the app.
+ * - Establishes a WebSocket connection using an authToken
+ * - Sends/receives signaling messages (offer, answer, hang-up, ICE)
+ * - Maintains user presence (online status)
+ * - Handles real-time messaging
+ *
+ * @param {ReactNode} children - Components wrapped by this provider
+ */
 export const WebSocketProvider = ({ children }) => {
   const pathname = usePathname(); // ✅ Get current path
   const router = useRouter();
@@ -30,18 +42,26 @@ export const WebSocketProvider = ({ children }) => {
 
   const pingIntervalRef = useRef(null);
 
-    // Function to refresh user state
+/**
+ * Fetches and sets the current authenticated user's ID.
+ * Called on every route change to refresh user state.
+ */
     const checkUser = useCallback(async () => {
       const userData = await fetchUser();
       setClientId(userData.user.uid);
     }, []);
 
-    // Re-run checkUser() on navigation (after login)
+    /**
+   * Re-run checkUser() on navigation (after login)
+   */
     useEffect(() => {
       checkUser();
     }, [pathname]);
 
-
+/**
+ * Fetches the authentication token needed for WebSocket connection.
+ * Called when clientId is available.
+ */
     useEffect(() => {
       if (!clientId || clientId === "DefaultClient") return;
       const fetchToken = async () => {
@@ -54,8 +74,11 @@ export const WebSocketProvider = ({ children }) => {
     }, [clientId]);
 
   
+    /**
+   * Fetches initial chat messages after token is available.
+   * Populates the messageHistory state for display and logic.
+   */
     useEffect(() => {
-      // Fetch messages
       const fetchMessagesData = async () => {
         if (!authToken) return;
         await fetchMessages().then((data) => {
@@ -75,7 +98,13 @@ export const WebSocketProvider = ({ children }) => {
     }, [authToken]);
 
 
-
+  /**
+   * Initializes and manages the WebSocket connection:
+   * - Opens the connection with the authToken
+   * - Pings the server every 30 seconds
+   * - Listens for messages and handles them via `handleMessage()`
+   * - Cleans up on unmount
+   */
   useEffect(() => {
     console.log("clientId: ", clientId);
     console.log("authToken: ", authToken);
@@ -136,7 +165,10 @@ export const WebSocketProvider = ({ children }) => {
     }; // Close the connection when the component unmounts
   }, [clientId, authToken]);
 
-  // Detect tab close or refresh
+  /**
+ * Gracefully handles tab closing or refresh events
+ * by closing WebSocket and clearing ping interval.
+ */
   useEffect(() => {
     const handleUnload = (event) => {
       event.preventDefault();
@@ -152,7 +184,12 @@ export const WebSocketProvider = ({ children }) => {
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, []);
 
-  // Handle incoming messages from websocket server
+  /**
+   * Handles all incoming WebSocket messages and routes them based on their type.
+   * Supports contact status changes, signaling messages, and instant messages.
+   *
+   * @param {Object} message - Parsed WebSocket message object
+   */
   const handleMessage = (message) => {
     switch (message.type) {
       case "online-contacts": // User's online contacts
@@ -204,7 +241,14 @@ export const WebSocketProvider = ({ children }) => {
     }
   };
 
-  // Send signaling message to the server
+  /**
+ * Sends a WebRTC signaling message to the server.
+ *
+ * @param {string} type - Type of signal (offer, answer, hang-up, etc.)
+ * @param {string} to - Target user ID
+ * @param {string} from - Sender user ID
+ * @param {Object} signal - Signal payload (SDP, ICE, etc.)
+ */
   const sendSignalingMessage = (type, to, from, signal) => {
     const message = {
         type: 'signal',
@@ -221,7 +265,12 @@ export const WebSocketProvider = ({ children }) => {
     }
   };
 
-  // Handle incoming signaling messages
+  /**
+ * Handles various WebRTC signaling types (offer, answer, ICE candidate, hang-up, instant message).
+ * Updates appropriate state for call signaling or messaging.
+ *
+ * @param {Object} message - WebSocket message with signaling data
+ */
   const handleSignalingMessage = (message) => {
     console.log("Signal received: ", message);
     switch (message.signalType) {
@@ -263,13 +312,19 @@ export const WebSocketProvider = ({ children }) => {
     }
   }
 
+  /**
+   * Logs incoming call details whenever the call state updates.
+   */
   useEffect(() => {
     if(incomingCalls.length > 0) {
         console.log("Incoming call detected");
         console.log("Incoming call data: ", incomingCalls);
     }
   }, [incomingCalls]);
-
+/**
+ * Exposes WebSocket-related state and actions to other components.
+ * Use `useWebSocket()` hook to access values in other components.
+ */
   return (
     <WebSocketContext.Provider value={
         {   socketRef, 
@@ -289,7 +344,11 @@ export const WebSocketProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use WebSocket context
+/**
+ * Hook to use WebSocket context inside any component.
+ *
+ * @returns {Object} WebSocket state and methods
+ */
 export const useWebSocket = () => {
   return useContext(WebSocketContext);
 };

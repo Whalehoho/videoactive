@@ -3,12 +3,25 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { fetchUser } from "../services/api"; // ✅ Use your own API
-
+  /**
+ * Renders the home page for the ViMeet application.
+ *
+ * This component displays:
+ * the home page content for authenticated users,
+ * including a welcome message and a button navigate to random call page.
+ *
+ * @returns {JSX.Element} The rendered About page component.
+ */
 export default function HomePage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
+  /**
+   * useEffect hook that runs on component mount.
+   * Fetches the current user information.
+   * If no user is returned, the user is redirected to the login page (/auth).
+   * Otherwise, the user state is populated and the loading state is turned off.
+   */
   useEffect(() => {
     fetchUser().then((data) => {
       if (!data) {
@@ -19,10 +32,16 @@ export default function HomePage() {
       setLoading(false);
     });
   }, []);
+  /**
+   * Redirects the user to the /randomCall page.
+   * Triggered when the "Make A Friend!" button is clicked.
+   */
   const handleClick = () => {
     router.push("/randomCall");
   };
-
+  /**
+   * Renders a loading screen while user data is being fetched.
+   */
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-pink-500">
@@ -30,7 +49,9 @@ export default function HomePage() {
       </div>
     );
   }
-
+ /**
+   * Renders the landing page content for authenticated users.
+   */
   return (
     <div>
       <main className="relative flex flex-col min-h-screen">
