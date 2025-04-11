@@ -28,39 +28,31 @@ export default function AuthPage() {
     } else {
       alert("Please allow popups for this website");
     }
-  }
+  };
 
-  // Listen for the message event to receive the token
+  // Listen for token response from popup
   useEffect(() => {
     const handleMessage = (event) => {
       if (event.data && event.data.token) {
         console.log("Token received:", event.data.token);
-        // Save the token to local storage or state
-        // localStorage.setItem("authToken", event.data.token);
-        // Print the token in the console
-        // console.log("Token saved:", localStorage.getItem("authToken"));
-        // Redirect to the home page
         router.push("/home");
       }
     };
 
     window.addEventListener("message", handleMessage);
-
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
+    return () => window.removeEventListener("message", handleMessage);
   }, [router]);
 
   return (
     <div className="flex flex-col min-h-screen items-center justify-center">
       {loading ? (
-        <p>Loading...</p> // ✅ Show loading text
+        <p>Loading...</p>
       ) : user ? (
-        <p>Redirecting...</p> // ✅ Prevent flickering
+        <p>Redirecting...</p>
       ) : (
         <button
-          onClick= {handleLogin} // ✅ Handle login
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+          onClick={handleLogin}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
         >
           Login with Google
         </button>

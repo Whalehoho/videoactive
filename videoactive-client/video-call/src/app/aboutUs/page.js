@@ -5,7 +5,7 @@ export default function About() {
         {/* Hero Section */}
         <section className="relative w-full h-[400px]">
           <img 
-            src="/landing3.jpg" 
+            src="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/landing3.jpg"
             alt="About ViMeet" 
             className="w-full h-full object-cover opacity-70" 
           />

@@ -11,7 +11,7 @@ export default function Home() {
         <section className="relative w-full h-[400px]">
           {/* Background Image */}
           <img 
-            src="/landing.jpg" 
+            src="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/landing.jpg" 
             alt="ViMeet Logo" 
             className="w-full h-full object-cover opacity-70" 
           />
@@ -31,8 +31,8 @@ export default function Home() {
 
         {/* Image Section */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-          <img src="/landing2.jpg" alt="Person working on laptop" className="rounded-lg shadow" />
-          <img src="/landing3.jpg" alt="Group of friends chatting" className="rounded-lg shadow" />
+          <img src="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/landing2.jpg" alt="Person working on laptop" className="rounded-lg shadow" />
+          <img src="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/landing3.jpg" alt="Group of friends chatting" className="rounded-lg shadow" />
         </section>
       </main>
     </div>

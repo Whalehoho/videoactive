@@ -22,6 +22,7 @@ export default function ConnectionPage() {
     sendSignalingMessage,
     messageHistory, setMessageHistory
   } = useWebSocket(); // Use WebSocket context instead of building a new one when visiting the page
+  // these are the states for incoming calls, offer data, answer data, hang-up data, and ICE candidate data
   const [targetClientId, setTargetClientId] = useState(null);
   const targetClientIdRef = useRef(targetClientId);
   const [status, setStatus] = useState("idle");
@@ -78,9 +79,7 @@ export default function ConnectionPage() {
     }, 100);
   };
   
-// ICE serves help establish a connection between peers by bypassing NAT and firewalls
-  // STUN servers help find the public IP address of a user
-  // TURN servers help relay media if direct connection fails, consumes more bandwidth, and is slower
+
   const iceServers = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
@@ -97,6 +96,12 @@ export default function ConnectionPage() {
       },
     ],
   };
+  // ICE serves help establish a connection between peers by bypassing NAT and firewalls
+  // STUN servers help find the public IP address of a user
+  // TURN servers help relay media if direct connection fails, consumes more bandwidth, and is slower
+  // We use free TURN servers from Xirsys, so calls might fail ocassionally
+
+  
   
 
   useEffect(() => {
@@ -480,34 +485,44 @@ export default function ConnectionPage() {
   
                 return (
                   <li
-                    key={contact.contactId}
-                    onClick={() => {
-                      handleContactClick(contact.contactId);
-                      targetClientIdRef.current = contact.contactId;
-                    }}
-                    className={`relative p-2 flex items-center space-x-3 rounded-lg cursor-pointer ${
-                      String(targetClientId) === String(contact.contactId) 
-                        ? 'bg-blue-500' 
-                        : 'hover:bg-blue-400 hover:text-white'
-                    }`}
-                  >
-                    {/* Profile Picture */}
-                    <img
-                      src={contact.profilePic || 'https://my-video-active-bucket.s3.amazonaws.com/videoCall/profile_default.jpg'} // fallback if null
-                      alt={`${contact.contactName}'s profile`}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                    />
-  
-                    {/* Name & Online Status */}
-                    <span className={`${isOnline ? 'text-green-400 font-semibold' : ''}`}>
-                      {contact.contactName}
-                    </span>
-  
-                    {/* Incoming Call Ping */}
-                    {hasIncomingCall && (
-                      <span className="absolute top-1 right-2 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
-                    )}
-                  </li>
+                  key={contact.contactId}
+                  onClick={() => {
+                    handleContactClick(contact.contactId);
+                    targetClientIdRef.current = contact.contactId;
+                  }}
+                  className={`relative p-2 flex items-center space-x-3 rounded-lg cursor-pointer ${
+                    String(targetClientId) === String(contact.contactId)
+                      ? 'bg-blue-500'
+                      : 'hover:bg-blue-400 hover:text-white'
+                  }`}
+                >
+                  {/* Profile Picture */}
+                  <img
+                    src={
+                      contact.profilePic ||
+                      'https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/user/profile_default.jpg'
+                    }
+                    alt={`${contact.contactName}'s profile`}
+                    className="w-10 h-10 rounded-full object-cover border border-gray-500"
+                  />
+
+                  {/* Name & Online Status */}
+                  <span className={`${isOnline ? 'text-green-400 font-semibold' : ''}`}>
+                    {contact.contactName}
+                  </span>
+
+                  {/* Incoming Call Ping */}
+                  {hasIncomingCall && (
+                    <span className="absolute top-1 right-2 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
+                  )}
+
+                  {/* Description Tooltip */}
+                  {contact.description && (
+                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 opacity-0 group-hover:opacity-100 bg-gray-400 text-white text-sm rounded px-3 py-1 shadow-lg whitespace-nowrap z-50 transition-opacity duration-200">
+                      {contact.description}
+                    </div>
+                  )}
+                </li>
                 );
               })}
           </ul>

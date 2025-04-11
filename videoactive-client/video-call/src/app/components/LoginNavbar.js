@@ -6,7 +6,7 @@ export default function Navbar({ activePage }) {
       
       {/* Logo */}
       <div className="text-pink-600 text-xl font-bold flex items-center hover:bg-pink-200 rounded-lg px-1">
-        <img src="/logos/logo.svg" alt="logo" className="rounded-lg px-1 mx-2" />
+        <img src="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/logos/logo.svg" alt="logo" className="rounded-lg px-1 mx-2" />
         ViMeet
       </div>
 

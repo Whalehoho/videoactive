@@ -1,10 +1,12 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { handleLogout } from "../services/api";
 import { useWebSocket } from "../context/WebSocketContext";
 
 export default function Navbar({ activePage, user, onLogout }) { 
+  const [navbarVisible, setNavbarVisible] = useState(false); // Track navbar visibility
   const router = useRouter();
   const { incomingCalls } = useWebSocket();
   const hasIncomingCalls = incomingCalls.length > 0;
@@ -15,17 +17,39 @@ export default function Navbar({ activePage, user, onLogout }) {
     onLogout(); // ✅ Trigger re-fetch in NavbarSwitcher
     router.push("/"); // Redirect to home after logout
   };
+  
+  const handleClick = () => {
+    router.push("/randomCall"); // Navigate to randomCall page
+  };
+
+  // Set navbar to be visible after data fetch or a slight delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNavbarVisible(true); // Make navbar visible after a short delay
+    }, 500); // Delay in milliseconds
+
+    return () => clearTimeout(timer); // Clean up on component unmount
+  }, []);
 
   return (
-    <nav className="bg-white shadow-md p-4 flex justify-between items-center">
+    <nav 
+      className={`bg-white shadow-md p-4 flex justify-between items-center transition-opacity duration-500 ease-in-out ${navbarVisible ? "opacity-100" : "opacity-0"}`}
+    >
       {/* Logo */}
-      <div className="text-pink-600 text-xl font-bold flex items-center hover:bg-pink-200 rounded-lg px-1">
-        <img src="/logos/logo.svg" alt="logo" className="rounded-lg px-1 mx-2" />
+      <div
+        className="text-pink-600 text-xl font-bold flex items-center hover:bg-pink-200 rounded-lg px-1 cursor-pointer"
+        onClick={handleClick} // Handle click event
+      >
+        <img
+          src="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/logos/logo.svg"
+          alt="logo"
+          className="rounded-lg px-1 mx-2"
+        />
         ViMeet
       </div>
 
       {/* Navigation Links */}
-      <div className="space-x-4 flex items-center">
+      <div className="space-x-4 flex items-center pt-3">
         <ul className="flex space-x-6">
           <li>
             <Link 
@@ -63,7 +87,7 @@ export default function Navbar({ activePage, user, onLogout }) {
             </Link>
           </li>
           <li>
-            <button onClick={handleUserLogout} className="px-3 py-2 bg-red-600 text-white rounded-lg">
+            <button onClick={handleUserLogout} className="px-2 py-1 bg-red-600 text-white rounded-lg">
             <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
