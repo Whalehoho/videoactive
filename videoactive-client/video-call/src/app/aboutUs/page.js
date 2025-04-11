@@ -1,3 +1,13 @@
+/**
+ * Renders the About page for the ViMeet application.
+ *
+ * This component displays:
+ * - A hero section with a background image and a title overlay.
+ * - A descriptive paragraph about the purpose and origin of ViMeet.
+ * - A mission statement block outlining the platform’s goals.
+ *
+ * @returns {JSX.Element} The rendered About page component.
+ */
 export default function About() {
   return (
     <div>

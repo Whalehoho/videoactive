@@ -533,7 +533,7 @@ export default function ConnectionPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen text-pink-500">Loading...</div>;
   }
 
   if (!user) return null; // Prevents flickering during redirect

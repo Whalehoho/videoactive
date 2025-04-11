@@ -19,10 +19,13 @@ export default function HomePage() {
       setLoading(false);
     });
   }, []);
+  const handleClick = () => {
+    router.push("/randomCall");
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen text-pink-500">
         Loading...
       </div>
     );

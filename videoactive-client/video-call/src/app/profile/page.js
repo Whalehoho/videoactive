@@ -27,7 +27,7 @@ export default function ProfilePage() {
         setName(info.user.username || "");
         setGender(info.user.gender ?? true);
         setDescription(info.user.description || "");
-        setImage(info.user.profilePic || 'https://my-video-active-bucket.s3.amazonaws.com/videoCall/profile_default.jpg');
+        setImage(info.user.profilePic || 'https://my-video-active-bucket.s3.amazonaws.com/videoCall/user/profile_default.jpg');
       }
       setLoading(false);
     });
@@ -90,7 +90,7 @@ export default function ProfilePage() {
   };
 
   if (loading || !user) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen text-pink-500">Loading...</div>;
   }
   if (!user) return null;
 

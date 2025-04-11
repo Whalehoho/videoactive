@@ -9,13 +9,13 @@ const Modal = ({ isOpen, onClose, onConfirm, message }) => {
         <p>{message}</p>
         <div className="mt-4 flex justify-end space-x-4">
           <button
-            className="bg-gray-500 text-white px-4 py-2 rounded-lg"
+            className="bg-gray-400 text-gray-700 px-4 py-2 rounded-lg"
             onClick={onClose}
           >
             Cancel
           </button>
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+            className="bg-blue-500 text-gray-700 px-4 py-2 rounded-lg"
             onClick={onConfirm}
           >
             Confirm

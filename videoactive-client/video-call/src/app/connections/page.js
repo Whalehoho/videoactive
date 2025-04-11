@@ -450,7 +450,7 @@ export default function ConnectionPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen text-pink-500">Loading...</div>;
   }
 
   if (!user) return null; // Prevents flickering during redirect
@@ -628,8 +628,8 @@ export default function ConnectionPage() {
   
         {/* Video Call Section */}
         <section className="flex-1 flex flex-col items-center justify-center p-10 relative">
-          <h2 className="text-xl font-bold mb-4">UserName: {user?.username}</h2>
-          <div className="mb-2 text-lg">
+          <h2 className="text-xl font-bold text-pink-500 mb-4">Username: {user?.username}</h2>
+          <div className="mb-2 text-lg text-gray-500">
             {targetClientId ? (
               incomingCalls.some((call) => String(call.from) === String(targetClientId)) ? (
                 <p>
