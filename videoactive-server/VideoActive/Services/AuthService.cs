@@ -18,9 +18,13 @@ public class AuthService
         _context = context;
     }
 
-    /// <summary>
-    /// Validates a JWT token and returns the ClaimsPrincipal.
-    /// </summary>
+    /**
+    * Validates a JWT token and returns the ClaimsPrincipal if the token is valid.
+    * 
+    * @param {string} token - The JWT token to be validated.
+    * 
+    * @returns {ClaimsPrincipal?} - Returns a ClaimsPrincipal if the token is valid; otherwise, null.
+    */
     public ClaimsPrincipal? ValidateJwtToken(string token)
     {
         var key = Encoding.UTF8.GetBytes(_config["JwtSettings:Key"]);
@@ -46,9 +50,15 @@ public class AuthService
         }
     }
 
-    /// <summary>
-    /// Extracts the user email from the JWT token and retrieves the user from the database.
-    /// </summary>
+    /**
+    * Extracts the user email from the JWT token in the authorization header 
+    * and retrieves the corresponding user from the database.
+    * 
+    * @param {string} authHeader - The authorization header containing the JWT token.
+    * 
+    * @returns {Task<User?>} - A task representing the async operation:
+    *                           - Returns the user if found, or null if the token is invalid or user not found.
+    */
     public async Task<User?> GetUserFromHeader(string authHeader)
     {
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
@@ -66,6 +76,14 @@ public class AuthService
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
+    /**
+    * Extracts the user email from the provided JWT token and retrieves the corresponding user from the database.
+    * 
+    * @param {string} token - The JWT token to extract the user information from.
+    * 
+    * @returns {Task<User?>} - A task representing the async operation:
+    *                           - Returns the user if found, or null if the token is invalid or user not found.
+    */
     public async Task<User?> GetUserFromToken(string token)
     {
         var principal = ValidateJwtToken(token);
@@ -79,9 +97,13 @@ public class AuthService
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    /// <summary>
-    /// Generates a JWT token for authentication.
-    /// </summary>
+    /**
+    * Generates a JWT token for the specified user email for authentication.
+    * 
+    * @param {string} email - The email of the user for whom the JWT token will be generated.
+    * 
+    * @returns {string} - The generated JWT token for authentication.
+    */
     public string GenerateJwtToken(string email)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtSettings:Key"]));
