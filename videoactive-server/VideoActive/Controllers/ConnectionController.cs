@@ -6,6 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using VideoActive.Models;
 
+/// <summary>
+/// Connection Controller for user to get, add, accept, reject, contacts.
+/// </summary>
 [Route("api/connections")]
 [ApiController]
 public class ConnectionController : ControllerBase
@@ -19,8 +22,13 @@ public class ConnectionController : ControllerBase
         _authService = authService;
     }
 
-    // GET: api/connections/contacts
-    [HttpGet("getContacts")]
+
+/**
+ * Retrieves the list of accepted contacts for the authenticated user.
+ * 
+ * @returns {Task<IActionResult>} - A task representing the async operation,containing a success response with a list 
+ * of contact user details,or an error response if the user is not authenticated.
+ */
     public async Task<IActionResult> GetUserContacts()
     {
         var user = await _authService.GetUserFromHeader(Request.Headers["Authorization"].ToString());
@@ -47,7 +55,13 @@ public class ConnectionController : ControllerBase
         });
     }
 
-
+    /**
+    * Sends a contact request to another user, unless already connected or pending.
+    * 
+    * @param {AddContactRequest} request - An object containing the target friend's user ID.
+    * @returns {Task<IActionResult>} - A task representing the async operation,containing a success message if the 
+    *   request was sent, or an error response if already connected, request pending, or invalid.
+    */
     [HttpPost("addContact")]
     public async Task<IActionResult> AddContact([FromBody] AddContactRequest request)
     {
@@ -98,13 +112,23 @@ public class ConnectionController : ControllerBase
         return Ok(new { message = "success", details ="Contact request sent successfully." });
     }
 
-    // ✅ Request model for adding contact
+
+    /// <summary>
+    /// Request model for initiating a new contact (friend) request.
+    /// </summary>
     public class AddContactRequest
     {
         public Guid FriendId { get; set; }
     }
 
-
+    /**
+    * Accepts a friend request by creating a relationship with Accepted status.
+    * 
+    * @param {AddContactRequest} request - The friend request object containing the target user's ID.
+    * @returns {Task<IActionResult>} - A task representing the async operation,
+    *                                  containing a success message if the relationship is created or already exists,
+    *                                  or an error response for invalid input or database issues.
+    */
     [HttpPost("acceptContact")]
     public async Task<IActionResult> AcceptContact([FromBody] AddContactRequest request)
     {
@@ -153,6 +177,14 @@ public class ConnectionController : ControllerBase
         }
     }
 
+    /**
+    * Rejects a pending friend request by removing the pending relationship entry.
+    * 
+    * @param {AddContactRequest} request - The request object containing the friend's ID.
+    * @returns {Task<IActionResult>} - A task representing the async operation,
+    *                                  containing a success message if the relationship is removed,
+    *                                  or an error response if not found or if a database issue occurs.
+    */
     [HttpPost("rejectContact")]
     public async Task<IActionResult> RejectContact([FromBody] AddContactRequest request)
     {

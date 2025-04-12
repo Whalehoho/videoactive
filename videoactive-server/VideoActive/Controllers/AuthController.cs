@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 using VideoActive.Models;
 using Microsoft.AspNetCore.Authorization;
 
+/// <summary>
+/// AuthController Controller for managing user authentication with google.
+/// Provide JWT Token for user.
+/// </summary>
 [Route("api/auth")]
 [ApiController]
 public class AuthController : ControllerBase
@@ -21,6 +25,11 @@ public class AuthController : ControllerBase
         _context = context;
     }
 
+    /**
+    * Initiates the Google OAuth login flow by redirecting the user to the Google authentication page.
+    * 
+    * @returns {IActionResult} - A challenge result that redirects to Google's OAuth login.
+    */
     [HttpGet("google-login")]
     public IActionResult GoogleLogin()
     {
@@ -31,6 +40,13 @@ public class AuthController : ControllerBase
         return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 
+    /**
+    * Handles the callback from Google after successful authentication.
+    * Extracts user information (email and username) and issues a JWT token.
+    * 
+    * @returns {Task<IActionResult>} - A task representing the async operation, 
+    *                                  containing an HTML script that sends the token to the client via postMessage.
+    */
     [HttpGet("google-response")]
     public async Task<IActionResult> GoogleResponse()
     {
@@ -81,6 +97,13 @@ public class AuthController : ControllerBase
 
     }
 
+    /**
+    * Validates the JWT token from the Authorization header and returns user details if valid.
+    * 
+    * @returns {Task<IActionResult>} - A task representing the async operation,
+    *                                  containing user data if the token is valid, 
+    *                                  or an Unauthorized status if the token is invalid.
+    */
     [HttpGet("getUser")]
     public async Task<IActionResult> ValidateToken()
     {
@@ -104,6 +127,11 @@ public class AuthController : ControllerBase
         });
     }
 
+    /**
+    * Logs the user out by deleting authentication cookies.
+    * 
+    * @returns {IActionResult} - A result indicating the success of the logout operation.
+    */
     [HttpPost("logout")]
     public IActionResult Logout()
     {

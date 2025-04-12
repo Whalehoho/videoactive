@@ -13,6 +13,10 @@ using System.Text.Json;
 
 [Route("api/user")]
 [ApiController]
+
+/// <summary>
+/// User Controller handles the CRUD of the user details and image upload.
+/// </summary>
 public class UserController : ControllerBase
 {
     private readonly IConfiguration _config;
@@ -26,6 +30,12 @@ public class UserController : ControllerBase
         _authService = authService;
     }
 
+    /**
+    * Updates the user's profile information such as username, gender, and description.
+    * 
+    * @param {UpdateUserRequest} request - Contains new values for the user's profile.
+    * @returns {IActionResult} - Returns success with updated user info or error response.
+    */
     [HttpPost("updateUser")]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request)
     {
@@ -62,67 +72,82 @@ public class UserController : ControllerBase
         });
     }
 
-[HttpPost("updateImage")]
-public async Task<IActionResult> UpdateImage(IFormFile file)
-{
-    var user = await _authService.GetUserFromHeader(Request.Headers["Authorization"].ToString());
-    if (user == null)
-        return Unauthorized(new { message = "error", details = "Invalid or expired token" });
+    /**
+    * Updates the user's profile picture by sending the image to a Lambda function for S3 processing.
+    * Validates image format and handles error responses from the Lambda service.
+    * 
+    * @param {IFormFile} file - The uploaded image file from the client.
+    * @returns {IActionResult} - Returns success with new image URL or error if upload fails.
+    */
 
-    if (file == null || file.Length == 0)
-        return BadRequest(new { message = "error", details = "No file uploaded" });
-
-    var allowedExtensions = new[] { ".png", ".jpeg", ".jpg" };
-    var fileExtension = Path.GetExtension(file.FileName).ToLower();
-    if (!allowedExtensions.Contains(fileExtension))
-        return BadRequest(new { message = "error", details = "Only PNG and JPEG files are allowed" });
-
-    try
+    [HttpPost("updateImage")]
+    public async Task<IActionResult> UpdateImage(IFormFile file)
     {
-        using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
-        var fileBytes = ms.ToArray();
-        var base64Image = Convert.ToBase64String(fileBytes);
+        var user = await _authService.GetUserFromHeader(Request.Headers["Authorization"].ToString());
+        if (user == null)
+            return Unauthorized(new { message = "error", details = "Invalid or expired token" });
 
-        var payload = new
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "error", details = "No file uploaded" });
+
+        var allowedExtensions = new[] { ".png", ".jpeg", ".jpg" };
+        var fileExtension = Path.GetExtension(file.FileName).ToLower();
+        if (!allowedExtensions.Contains(fileExtension))
+            return BadRequest(new { message = "error", details = "Only PNG and JPEG files are allowed" });
+
+        try
         {
-            image = base64Image,
-            extension = fileExtension,
-            userId = user.UID.ToString(),
-            oldImageUrl = user.ProfilePic
-        };
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var fileBytes = ms.ToArray();
+            var base64Image = Convert.ToBase64String(fileBytes);
 
-        var json = JsonSerializer.Serialize(payload);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var payload = new
+            {
+                image = base64Image,
+                extension = fileExtension,
+                userId = user.UID.ToString(),
+                oldImageUrl = user.ProfilePic
+            };
 
-        using var httpClient = new HttpClient();
-        var lambdaUrl = "https://91yzrzswsk.execute-api.ap-southeast-1.amazonaws.com/default/video-active-s3-trigger";
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await httpClient.PostAsync(lambdaUrl, content);
-        var responseBody = await response.Content.ReadAsStringAsync();
+            using var httpClient = new HttpClient();
+            var lambdaUrl = "https://91yzrzswsk.execute-api.ap-southeast-1.amazonaws.com/default/video-active-s3-trigger";
 
-        if (!response.IsSuccessStatusCode)
-        {
-            Console.WriteLine("Lambda error: " + responseBody);
-            return StatusCode((int)response.StatusCode, new { message = "Lambda error", details = responseBody });
+            var response = await httpClient.PostAsync(lambdaUrl, content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Lambda error: " + responseBody);
+                return StatusCode((int)response.StatusCode, new { message = "Lambda error", details = responseBody });
+            }
+
+            var result = JsonSerializer.Deserialize<Dictionary<string, string>>(responseBody);
+            if (result == null || !result.TryGetValue("imageUrl", out var imageUrl))
+                return StatusCode(500, new { message = "error", details = "Lambda response missing imageUrl" });
+
+            user.ProfilePic = imageUrl;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "success", imageUrl = user.ProfilePic });
         }
-
-        var result = JsonSerializer.Deserialize<Dictionary<string, string>>(responseBody);
-        if (result == null || !result.TryGetValue("imageUrl", out var imageUrl))
-            return StatusCode(500, new { message = "error", details = "Lambda response missing imageUrl" });
-
-        user.ProfilePic = imageUrl;
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "success", imageUrl = user.ProfilePic });
+        catch (Exception ex)
+        {
+            Console.WriteLine("Image Upload Error: " + ex.Message);
+            return StatusCode(500, new { message = "Image upload failed", details = ex.Message });
+        }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine("Image Upload Error: " + ex.Message);
-        return StatusCode(500, new { message = "Image upload failed", details = ex.Message });
-    }
-}
 
+/**
+ * [LEGACY/ALTERNATIVE] Uploads the user's profile picture directly to S3 using AWS SDK.
+ * Deletes the previous image if it exists, and saves the new public image URL in the user's profile.
+ * 
+ * @param {IFormFile} file - The uploaded image file from the client.
+ * @returns {IActionResult} - Returns success with image URL, or error if upload fails.
+ */
 // public async Task<IActionResult> UpdateImage(IFormFile file)
 //     {
 //         var user = await _authService.GetUserFromHeader(Request.Headers["Authorization"].ToString());

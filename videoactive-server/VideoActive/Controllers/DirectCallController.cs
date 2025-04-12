@@ -5,7 +5,10 @@ using Newtonsoft.Json;
 using VideoActive.Services;
 using VideoActive.Models;
 using Microsoft.EntityFrameworkCore;
-
+    /// <summary>
+    /// Direct Call Controller handles WebSocket connections including fowarding, receiving messages. 
+    /// Manages Contact List including notifying online/offline status.
+    /// </summary>
 namespace VideoActive.WebSocketHandlers
 {
     public class DirectCallHandler
@@ -14,11 +17,19 @@ namespace VideoActive.WebSocketHandlers
         // private static readonly ValkeyService _valkeyService;
         private static ApplicationDbContext _context;
 
+        /**
+        * Initializes the WebSocket handler with the provided database context.
+        * 
+        * @param {ApplicationDbContext} context - The application database context.
+        */
         public static void Initialize(ApplicationDbContext context)
         {
             _context = context;
         }
 
+        /**
+        * Static constructor to load configuration settings, like external services (currently commented out).
+        */
         static DirectCallHandler()
         {
             var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
@@ -26,21 +37,27 @@ namespace VideoActive.WebSocketHandlers
             // _valkeyService = new(_valkeyConnectionString);
             
         }
-
+        // Dictionary to track client contacts
         private static readonly Dictionary<string, List<string>> clientContacts = new()
         {
             
         };
-
+        // Dictionary to track connected WebSocket clients
         private static readonly Dictionary<string, WebSocket?> clientPools = new()
         {
             
         };
-
+        // Concurrent dictionary to manage active WebSocket connections
         private static ConcurrentDictionary<string, WebSocket> activeSockets = new();
 
         
-
+        /**
+        * Handles a new WebSocket connection for a client, assigns them an ID, and processes incoming messages.
+        * 
+        * @param {WebSocket} socket - The WebSocket connection instance.
+        * @param {string} clientId - The unique identifier for the client.
+        * @returns {Task} - A task representing the async operation.
+        */
         public static async Task HandleWebSocketAsync(WebSocket socket, string? clientId)
         {
             // Console.WriteLine($"valkeyConnectionString: {_valkeyConnectionString}");
@@ -72,6 +89,13 @@ namespace VideoActive.WebSocketHandlers
             await ReceiveMessages(socket, clientId);
         }
 
+        /**
+        * Receives messages from a WebSocket connection, processes them, and forwards to the target client if needed.
+        * 
+        * @param {WebSocket} socket - The WebSocket connection instance.
+        * @param {string} clientId - The unique identifier for the client sending the message.
+        * @returns {Task} - A task representing the async operation.
+        */
         private static async Task ReceiveMessages(WebSocket socket, string clientId)
         {
             var buffer = new byte[8192]; 
@@ -128,6 +152,13 @@ namespace VideoActive.WebSocketHandlers
             }
         }
 
+        /**
+        * Sends a message to a target client identified by their clientId.
+        * 
+        * @param {string} targetClientId - The unique identifier for the target client.
+        * @param {string} message - The message to be sent.
+        * @returns {Task} - A task representing the async operation.
+        */
         private static async Task SendMessageToTargetClient(string targetClientId, string message)
         {
             if (clientPools.TryGetValue(targetClientId, out WebSocket? targetSocket) && targetSocket?.State == WebSocketState.Open)
@@ -146,7 +177,13 @@ namespace VideoActive.WebSocketHandlers
             }
         }
 
-
+        /**
+        * Forwards a message from one client to the target client based on the 'to' field in the message.
+        * 
+        * @param {WebSocket} sender - The WebSocket instance of the sender.
+        * @param {string} message - The message to be forwarded.
+        * @returns {Task} - A task representing the async operation.
+        */
         private static async Task ForwardMessage(WebSocket sender, string message)
         {
             if(clientPools.FirstOrDefault(x => x.Value == sender).Key is string senderId)
@@ -163,6 +200,12 @@ namespace VideoActive.WebSocketHandlers
             }
         }
 
+        /**
+        * Marks a client as online and notifies their contacts.
+        * 
+        * @param {string} clientId - The unique identifier of the client.
+        * @returns {Task} - A task representing the async operation.
+        */
         public static async Task Online(string clientId)
         {
 
@@ -237,6 +280,12 @@ namespace VideoActive.WebSocketHandlers
             }
         }
 
+        /**
+        * Marks a client as offline and notifies their contacts.
+        * 
+        * @param {string} clientId - The unique identifier of the client.
+        * @returns {Task} - A task representing the async operation.
+        */
         public static async Task Offline(string clientId)
         {
             // Set user status to offline in the database

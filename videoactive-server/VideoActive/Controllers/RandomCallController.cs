@@ -7,15 +7,22 @@ using VideoActive.Models;
 
 namespace VideoActive.WebSocketHandlers
 {
+    /// <summary>
+    /// Random Call Controller handles random call pairing between clients using WebSocket connections.
+    /// Responsible for pairing, message forwarding, call logging, and client cleanup.
+    /// </summary>
     public class RandomCallHandler
     {
+        // In-memory client state tracking
         private static readonly List<WebSocket> waitingClients = new();
         private static readonly Dictionary<string, (WebSocket caller, WebSocket callee)> activePairs = new();
         private static readonly Dictionary<WebSocket, string> clientPairIds = new();
         private static readonly Dictionary<string, WebSocket> clientSockets = new();
         private static readonly DbContextOptions<ApplicationDbContext> _dbOptions;
 
-        // Static constructor to initialize DB options
+        /// <summary>
+        /// Static constructor to initialize database connection.
+        /// </summary>
         static RandomCallHandler()
         {
             var connectionString = ConfigHelper.GetConnectionString("DefaultConnection");
@@ -25,6 +32,16 @@ namespace VideoActive.WebSocketHandlers
             _dbOptions = optionsBuilder.Options;
         }
 
+        /**
+        * Handles the WebSocket connection for a client and attempts to pair with another client.
+        * When two clients are paired, they are notified of their roles (caller or callee), 
+        * and a call log is created in the database.
+        *
+        * @param {WebSocket} socket - The WebSocket connection object representing the client.
+        * @param {string} clientId - The unique identifier for the client.
+        * 
+        * @returns {Promise<void>} - A promise that resolves when the connection and pairing process is complete.
+        */
         public static async Task HandleWebSocketAsync(WebSocket socket, string clientId)
         {
             Console.WriteLine($"Client connected: {clientId}");
@@ -78,6 +95,15 @@ namespace VideoActive.WebSocketHandlers
             await ReceiveMessages(socket, clientId);
         }
 
+        /**
+        * Receives and processes messages from the WebSocket connection.
+        * It forwards messages to the paired client, and handles disconnections gracefully by logging the end time of the call.
+        *
+        * @param {WebSocket} socket - The WebSocket connection object representing the client.
+        * @param {string} clientId - The unique identifier for the client.
+        * 
+        * @returns {Promise<void>} - A promise that resolves when the message processing is complete.
+        */
         private static async Task ReceiveMessages(WebSocket socket, string clientId)
         {
             var buffer = new byte[8192];
@@ -149,6 +175,15 @@ namespace VideoActive.WebSocketHandlers
             }
         }
 
+        /**
+        * Notifies the client of a successful pairing, providing the pair ID and the client's role in the call.
+        *
+        * @param {WebSocket} client - The WebSocket connection object of the client to notify.
+        * @param {string} pairId - The unique identifier for the pair of clients.
+        * @param {string} role - The role of the client in the call (either 'caller' or 'callee').
+        * 
+        * @returns {Promise<void>} - A promise that resolves when the notification is sent successfully.
+        */
         private static async Task NotifyPair(WebSocket client, string pairId, string role)
         {
             var message = JsonConvert.SerializeObject(new
@@ -163,6 +198,14 @@ namespace VideoActive.WebSocketHandlers
 
         }
 
+        /**
+        * Forwards a message from the sender to the paired receiver.
+        *
+        * @param {WebSocket} sender - The WebSocket connection object of the sender.
+        * @param {string} message - The message to forward to the receiver.
+        * 
+        * @returns {Promise<void>} - A promise that resolves when the message is successfully forwarded.
+        */
         private static async Task ForwardMessage(WebSocket sender, string message)
         {
             // 1. Find the pair ID for the sender
@@ -181,6 +224,13 @@ namespace VideoActive.WebSocketHandlers
             }
         }
 
+        /**
+        * Cleans up after a client disconnects, notifying the peer and removing client data from active tracking.
+        *
+        * @param {WebSocket} socket - The WebSocket connection object of the disconnected client.
+        * 
+        * @returns {Promise<void>} - A promise that resolves when the client is successfully cleaned up.
+        */
         private static async Task CleanupDisconnectedClient(WebSocket socket)
         {
             if (clientPairIds.TryGetValue(socket, out string? pairId))
@@ -214,6 +264,14 @@ namespace VideoActive.WebSocketHandlers
             }
         }
 
+
+        /**
+        * Retrieves the connection string for the database from the appsettings.json configuration file.
+        *
+        * @param {string} [name='DefaultConnection'] - The name of the connection string in the configuration file.
+        * 
+        * @returns {string} - The connection string associated with the given name.
+        */
         public static class ConfigHelper
         {
             public static string GetConnectionString(string name = "DefaultConnection")

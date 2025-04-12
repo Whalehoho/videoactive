@@ -8,6 +8,10 @@ using VideoActive.Models;
 using System.Text.Json;
 using BCrypt.Net;
 
+/// <summary>
+/// AdminController Controller for managing administrative authentication and password handling.
+/// Only accessible to users in the Admin role.
+/// </summary>
 [Authorize(Roles = "Admin")]
 public class AdminController: Controller
 {
@@ -19,6 +23,11 @@ public class AdminController: Controller
         _context = context;
     }
 
+    /**
+    * Displays the login view for admin users.
+    * 
+    * @returns {IActionResult} - The login view for the admin user.
+    */
     [AllowAnonymous]
     [HttpGet]
     public IActionResult Login()
@@ -26,6 +35,18 @@ public class AdminController: Controller
         return View();
     }
 
+
+    /**
+    * Handles the admin login requests and authenticates the user.
+    * Redirects to the ChangePassword view if the default password is still in use.
+    * 
+    * @param {LoginViewModel} model - The login view model containing the username and password.
+    * 
+    * @returns {Task<IActionResult>} - A task representing the async operation:
+    *                                 - Redirects to Dashboard on success.
+    *                                 - Redirects to ChangePassword if default password used.
+    *                                 - Returns the login view with error messages if authentication fails.
+    */
     [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Login(LoginViewModel model)
@@ -69,7 +90,12 @@ public class AdminController: Controller
         return RedirectToAction("Dashboard", "Home");
     }
 
-
+    /**
+    * Logs out the current admin user and clears authentication cookies.
+    * 
+    * @returns {Task<IActionResult>} - A task representing the async operation, 
+    *                                  which redirects to the login view after logging out.
+    */
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme,
@@ -88,6 +114,15 @@ public class AdminController: Controller
         return RedirectToAction("Login");
     }
 
+
+    /**
+    * Verifies the entered password against the stored hash using BCrypt.
+    * 
+    * @param {string} enteredPassword - The plain text password entered by the user.
+    * @param {string} storedHash - The hashed password stored in the database.
+    * 
+    * @returns {boolean} - True if the entered password matches the stored hash; otherwise, false.
+    */
     private bool VerifyPassword(string enteredPassword, string storedHash)
     {
         // print hash of entered password
@@ -95,6 +130,11 @@ public class AdminController: Controller
         return BCrypt.Net.BCrypt.Verify(enteredPassword, storedHash);
     }
 
+    /**
+    * Displays the change password view for the currently authenticated admin.
+    * 
+    * @returns {IActionResult} - The change password view for the authenticated admin user.
+    */
     [HttpGet]
     public IActionResult ChangePassword()
     {
@@ -109,6 +149,16 @@ public class AdminController: Controller
         return View();
     }
 
+
+    /**
+    * Handles the password change request for the current admin user.
+    * Verifies the current password before updating to a new one.
+    * 
+    * @param {ChangePasswordViewModel} model - The view model containing the current and new passwords.
+    * 
+    * @returns {IActionResult} - The change password view:
+    *                           - Displays success or error messages based on the password update process.
+    */
     [HttpPost]
     public IActionResult ChangePassword(ChangePasswordViewModel model)
     {
