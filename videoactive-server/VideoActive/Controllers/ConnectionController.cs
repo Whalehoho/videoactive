@@ -29,6 +29,7 @@ public class ConnectionController : ControllerBase
  * @returns {Task<IActionResult>} - A task representing the async operation,containing a success response with a list 
  * of contact user details,or an error response if the user is not authenticated.
  */
+     [HttpGet("getContacts")]
     public async Task<IActionResult> GetUserContacts()
     {
         var user = await _authService.GetUserFromHeader(Request.Headers["Authorization"].ToString());
