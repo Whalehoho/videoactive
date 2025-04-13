@@ -580,7 +580,7 @@ export default function ConnectionPage() {
                     handleContactClick(contact.contactId);
                     targetClientIdRef.current = contact.contactId;
                   }}
-                  className={`relative p-2 flex items-center space-x-3 rounded-lg cursor-pointer ${
+                  className={`group relative p-2 flex items-center space-x-3 rounded-lg cursor-pointer transition-all ${
                     String(targetClientId) === String(contact.contactId)
                       ? 'bg-blue-500'
                       : 'hover:bg-blue-400 hover:text-white'
@@ -590,21 +590,24 @@ export default function ConnectionPage() {
                   <img
                     src={
                       contact.profilePic ||
-                      'https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/user/profile_default.jpg'
+                      'https://my-video-active-bucket.s3.amazonaws.com/videoCall/user/profile_default.jpg'
                     }
                     alt={`${contact.contactName}'s profile`}
-                    className="w-10 h-10 rounded-full object-cover border border-gray-500"
+                    className="w-10 h-10 rounded-full object-cover border border-gray-300"
                   />
+
 
                   {/* Name & Online Status */}
                   <span className={`${isOnline ? 'text-green-400 font-semibold' : ''}`}>
                     {contact.contactName}
                   </span>
 
+
                   {/* Incoming Call Ping */}
                   {hasIncomingCall && (
                     <span className="absolute top-1 right-2 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
                   )}
+
 
                   {/* Description Tooltip */}
                   {contact.description && (
