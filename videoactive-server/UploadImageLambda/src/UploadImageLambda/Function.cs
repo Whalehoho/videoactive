@@ -1,119 +1,175 @@
-using System;
-using System.IO;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
 using Amazon.S3;
+using Amazon.S3.Transfer;
+using Microsoft.AspNetCore.WebUtilities;
 using Amazon.S3.Model;
 using Amazon;
+using Microsoft.Net.Http.Headers;
 
+// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace UploadImageLambda
+namespace UploadImageLambda;
+
+public class Function
 {
-    public class Function
+    private readonly string bucketName = "my-video-active-bucket";
+    private readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast1;
+    private readonly IAmazonS3 s3Client;
+
+    public Function()
     {
-        private readonly string bucketName = "my-video-active-bucket";
-        private readonly RegionEndpoint region = RegionEndpoint.APSoutheast1;
+        s3Client = new AmazonS3Client(bucketRegion);
+    }
 
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
+    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
+    {
+        try
         {
-            try
+            // Try both case variants
+            if (!request.Headers.TryGetValue("content-type", out var contentTypeHeader) && 
+                !request.Headers.TryGetValue("Content-Type", out contentTypeHeader))
             {
-                var json = JsonSerializer.Deserialize<Dictionary<string, string>>(request.Body);
-
-                if (json == null ||
-                    !json.TryGetValue("image", out var base64Image) ||
-                    !json.TryGetValue("extension", out var extension) ||
-                    !json.TryGetValue("userId", out var userId))
+                return new APIGatewayProxyResponse
                 {
-                    return new APIGatewayProxyResponse
-                    {
-                        StatusCode = 400,
-                        Body = JsonSerializer.Serialize(new { message = "error", details = "Missing required fields: image, extension, userId" }),
-                        Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-                    };
-                }
-
-                byte[] fileBytes = Convert.FromBase64String(base64Image);
-
-                // Generate consistent file key
-                string keyName = $"videoCall/profile_{userId}{extension}";
-
-                using var stream = new MemoryStream(fileBytes);
-                using var client = new AmazonS3Client(region);
-                var putRequest = new PutObjectRequest
-                {
-                    BucketName = bucketName,
-                    Key = keyName,
-                    InputStream = stream,
-                    ContentType = GetContentType(extension),
-                    CannedACL = S3CannedACL.PublicRead
+                    StatusCode = (int)HttpStatusCode.BadRequest,
+                    Body = "Missing content-type header"
                 };
+            }
 
-                await client.PutObjectAsync(putRequest);
+            var boundary = GetBoundary(contentTypeHeader);
+            if (string.IsNullOrEmpty(boundary))
+            {
+                return new APIGatewayProxyResponse
+                {
+                    StatusCode = (int)HttpStatusCode.BadRequest,
+                    Body = "Invalid content-type header"
+                };
+            }
 
-                // Optionally delete old image if provided
-                if (json.TryGetValue("oldImageUrl", out var oldImageUrl) && !string.IsNullOrEmpty(oldImageUrl))
+            await using var stream = request.IsBase64Encoded
+                ? new MemoryStream(Convert.FromBase64String(request.Body))
+                : new MemoryStream(System.Text.Encoding.UTF8.GetBytes(request.Body));
+
+            var reader = new MultipartReader(boundary, stream);
+
+            string userId = null;
+            string extension = null;
+            string oldImageUrl = null;
+            MemoryStream imageStream = null;
+            string fileName = null;
+            string contentType = null;
+
+            MultipartSection section;
+            while ((section = await reader.ReadNextSectionAsync()) != null)
+            {
+                var hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition);
+
+                if (!hasContentDispositionHeader || string.IsNullOrEmpty(contentDisposition?.Name.Value)) continue;
+
+                var key = contentDisposition.Name.Value;
+
+                if (contentDisposition.DispositionType.Equals("form-data") && contentDisposition.FileName.HasValue)
+                {
+                    // File section
+                    fileName = contentDisposition.FileName.Value;
+                    contentType = section.ContentType ?? "application/octet-stream";
+                    imageStream = new MemoryStream();
+                    await section.Body.CopyToAsync(imageStream);
+                    imageStream.Position = 0;
+                }
+                else
+                {
+                    // Text fields
+                    using var sr = new StreamReader(section.Body);
+                    var value = await sr.ReadToEndAsync();
+
+                    if (key == "userId")
+                        userId = value;
+                    else if (key == "extension")
+                        extension = value;
+                    else if (key == "oldImageUrl")
+                        oldImageUrl = value;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(extension) || imageStream == null || imageStream.Length == 0) {
+
+                return new APIGatewayProxyResponse
+                {
+                    StatusCode = (int)HttpStatusCode.BadRequest,
+                    Body = "Missing form fields"
+                };
+            }
+
+            // Upload the image to S3
+            string keyName = $"user-images/{userId}/{Guid.NewGuid()}{extension}";
+
+            var uploadRequest = new TransferUtilityUploadRequest
+            {
+                InputStream = imageStream,
+                Key = keyName,
+                BucketName = bucketName,
+                ContentType = contentType,
+                CannedACL = S3CannedACL.PublicRead
+            };
+
+            var transferUtility = new TransferUtility(s3Client);
+            await transferUtility.UploadAsync(uploadRequest);
+
+            // Delete old image if provided
+            if (!string.IsNullOrEmpty(oldImageUrl))
+            {
+                try
                 {
                     var oldKey = ExtractKeyFromUrl(oldImageUrl);
                     if (!string.IsNullOrEmpty(oldKey))
                     {
-                        await client.DeleteObjectAsync(new DeleteObjectRequest
-                        {
-                            BucketName = bucketName,
-                            Key = oldKey
-                        });
+                        await s3Client.DeleteObjectAsync(bucketName, oldKey);
                     }
                 }
-
-                var imageUrl = $"https://{bucketName}.s3.amazonaws.com/{keyName}";
-
-                return new APIGatewayProxyResponse
+                catch (Exception ex)
                 {
-                    StatusCode = (int)HttpStatusCode.OK,
-                    Body = JsonSerializer.Serialize(new { message = "success", imageUrl }),
-                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-                };
+                    context.Logger.LogLine($"Failed to delete old image: {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                context.Logger.LogLine($"Error: {ex.Message}");
-                return new APIGatewayProxyResponse
-                {
-                    StatusCode = 500,
-                    Body = JsonSerializer.Serialize(new { message = "error", details = ex.Message }),
-                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-                };
-            }
-        }
 
-        private string GetContentType(string extension)
-        {
-            return extension switch
+            var imageUrl = $"https://{bucketName}.s3.{bucketRegion.SystemName}.amazonaws.com/{keyName}";
+
+            return new APIGatewayProxyResponse
             {
-                ".png" => "image/png",
-                ".jpeg" => "image/jpeg",
-                ".jpg" => "image/jpeg",
-                _ => "application/octet-stream"
+                StatusCode = (int)HttpStatusCode.OK,
+                Body = System.Text.Json.JsonSerializer.Serialize(new { imageUrl }),
+                Headers = new Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" },
+                    { "Access-Control-Allow-Origin", "*" }
+                }
             };
         }
-
-        private string ExtractKeyFromUrl(string url)
+        catch (Exception ex)
         {
-            try
+            context.Logger.LogLine($"Lambda error: {ex.Message}");
+            return new APIGatewayProxyResponse
             {
-                var uri = new Uri(url);
-                return uri.AbsolutePath.TrimStart('/');
-            }
-            catch
-            {
-                return null;
-            }
+                StatusCode = 500,
+                Body = $"Internal server error: {ex.Message}"
+            };
         }
+    }
+
+    private string GetBoundary(string contentType)
+    {
+        var elements = contentType.Split(';');
+        var boundaryElement = elements.FirstOrDefault(entry => entry.Trim().StartsWith("boundary=", StringComparison.OrdinalIgnoreCase));
+        return boundaryElement?.Split('=')[1].Trim('"');
+    }
+
+    private string ExtractKeyFromUrl(string imageUrl)
+    {
+        var uri = new Uri(imageUrl);
+        return uri.AbsolutePath.TrimStart('/');
     }
 }

@@ -2,13 +2,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchUser, updateUser, uploadImage } from "../services/api";
-  /**
+import Swal from "sweetalert2"; // Import SweetAlert2
+
+/**
  * Renders the profile page for the ViMeet application.
  *
  * This component displays:
  * the user profile details for authenticated users,
  * including a form to update user information including username, description and images.
- * It advised user to submit images belox 400*400px.
+ * It advised user to submit images below 400*400px.
  *
  * @returns {JSX.Element} The rendered About page component.
  */
@@ -23,7 +25,8 @@ export default function ProfilePage() {
   const [image, setImage] = useState(null); // Local preview
   const [imageFile, setImageFile] = useState(null); // File to send
   const [updating, setUpdating] = useState(false);
-/**
+
+  /**
    * On initial render, fetch user data.
    * If unauthenticated, redirect to /auth.
    * Otherwise, populate form with user details.
@@ -45,6 +48,7 @@ export default function ProfilePage() {
       setLoading(false);
     });
   }, []);
+
   /**
    * Handle file selection for profile image upload.
    * Validates file type and previews image.
@@ -54,7 +58,12 @@ export default function ProfilePage() {
     if (file) {
       const validTypes = ["image/png", "image/jpeg", "image/jpg"];
       if (!validTypes.includes(file.type)) {
-        alert("Only PNG and JPEG files are allowed.");
+        Swal.fire({
+          title: 'Invalid File Type',
+          text: 'Only PNG and JPEG files are allowed.',
+          icon: 'error',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
       const imageURL = URL.createObjectURL(file);
@@ -62,10 +71,11 @@ export default function ProfilePage() {
       setImageFile(file);
     }
   };
-/**
+
+  /**
    * Submits the updated user data to the backend.
    * If an image is selected, it will be uploaded before sending the update.
-   * Displays alert messages based on outcome.
+   * Displays Swal messages based on outcome.
    */
   const handleUpdateUser = async () => {
     setUpdating(true);
@@ -76,7 +86,12 @@ export default function ProfilePage() {
       description === user.description &&
       !imageFile
     ) {
-      alert("No changes detected.");
+      Swal.fire({
+        title: 'No Changes',
+        text: 'No changes detected.',
+        icon: 'info',
+        confirmButtonColor: '#3085d6'
+      });
       setUpdating(false);
       return;
     }
@@ -89,7 +104,12 @@ export default function ProfilePage() {
         imageUrl = uploadResponse.imageUrl;
         setImage(imageUrl);
       } else {
-        alert("Failed to upload image.");
+        Swal.fire({
+          title: 'Upload Error',
+          text: 'Failed to upload image.',
+          icon: 'error',
+          confirmButtonColor: '#3085d6'
+        });
         setUpdating(false);
         return;
       }
@@ -97,25 +117,37 @@ export default function ProfilePage() {
 
     const response = await updateUser({ username: name, gender, description, image: imageUrl });
     if (response?.message === "success" && response.user) {
-      alert("Profile updated successfully!");
+      Swal.fire({
+        title: 'Success',
+        text: 'Profile updated successfully!',
+        icon: 'success',
+        confirmButtonColor: '#3085d6'
+      });
       setUser(response.user); // ✅ Update user directly from response
       setName(response.user.username || "");
       setGender(response.user.gender ?? true); 
       setDescription(response.user.description || "");
     } else {
-      alert("Failed to update profile.");
+      Swal.fire({
+        title: 'Update Error',
+        text: 'Failed to update profile.',
+        icon: 'error',
+        confirmButtonColor: '#3085d6'
+      });
     }
 
     setUpdating(false);
   };
-/**
+
+  /**
    * Render loading screen while user data is loading.
    */
   if (loading || !user) {
     return <div className="flex items-center justify-center min-h-screen text-pink-500">Loading...</div>;
   }
   if (!user) return null;
-/**
+
+  /**
    * Render the profile page form for authenticated users.
    */
   return (
