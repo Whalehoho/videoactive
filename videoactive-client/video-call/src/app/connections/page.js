@@ -590,7 +590,7 @@ export default function ConnectionPage() {
                   <img
                     src={
                       contact.profilePic ||
-                      'https://my-video-active-bucket.s3.amazonaws.com/videoCall/user/profile_default.jpg'
+                      'https://my-video-active-bucket.s3.amazonaws.com/videoCall/public/profile_default.jpg'
                     }
                     alt={`${contact.contactName}'s profile`}
                     className="w-10 h-10 rounded-full object-cover border border-gray-300"

@@ -43,7 +43,7 @@ export default function ProfilePage() {
         setName(info.user.username || "");
         setGender(info.user.gender ?? true);
         setDescription(info.user.description || "");
-        setImage(info.user.profilePic || 'https://my-video-active-bucket.s3.amazonaws.com/videoCall/user/profile_default.jpg');
+        setImage(info.user.profilePic || 'https://my-video-active-bucket.s3.amazonaws.com/videoCall/public/profile_default.jpg');
       }
       setLoading(false);
     });
