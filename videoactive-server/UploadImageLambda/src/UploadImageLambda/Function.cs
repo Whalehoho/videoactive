@@ -12,11 +12,14 @@ using Microsoft.Net.Http.Headers;
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace UploadImageLambda;
-
+    /**
+     * Represents the main Lambda function that handles image uploads to S3 and optional deletion of previous images.
+     */
 public class Function
 {
-    private readonly string bucketName = "my-video-active-bucket";
-    private readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast1;
+    
+    private readonly string bucketName = Environment.GetEnvironmentVariable("S3_BUCKET_NAME") ?? "my-video-active-bucket";
+    private readonly RegionEndpoint bucketRegion = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AWS_BUCKET_REGION") ?? "ap-southeast-1");
     private readonly IAmazonS3 s3Client;
 
     public Function()
@@ -24,6 +27,15 @@ public class Function
         s3Client = new AmazonS3Client(bucketRegion);
     }
 
+    /**
+    * Handles incoming API Gateway requests for image upload.
+    * Parses multipart/form-data to extract fields and image, uploads image to S3, 
+    * and deletes any previous image if provided.
+    *
+    * @param {APIGatewayProxyRequest} request - The incoming HTTP request from API Gateway.
+    * @param {ILambdaContext} context - The Lambda execution context.
+    * @returns {Task<APIGatewayProxyResponse>} A response containing the image URL or an error.
+    */
     public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
         try
@@ -105,7 +117,7 @@ public class Function
             }
 
             // Upload the image to S3
-            string keyName = $"user-images/{userId}/{Guid.NewGuid()}{extension}";
+            string keyName = $"videoCall/user-images/{userId}/{Guid.NewGuid()}{extension}";
 
             var uploadRequest = new TransferUtilityUploadRequest
             {
@@ -159,7 +171,13 @@ public class Function
             };
         }
     }
-
+    /**
+    * Extracts the boundary string from the multipart content-type header.
+    * Used by the MultipartReader to split incoming form-data sections.
+    * 
+    * @param {string} contentType - The Content-Type header from the request.
+    * @returns {string} The boundary string used in multipart form parsing.
+    */
     private string GetBoundary(string contentType)
     {
         var elements = contentType.Split(';');
@@ -167,6 +185,13 @@ public class Function
         return boundaryElement?.Split('=')[1].Trim('"');
     }
 
+    /**
+    * Extracts the S3 object key from a full image URL.
+    * Useful for locating and deleting old images stored in S3.
+    * 
+    * @param {string} imageUrl - The full image URL.
+    * @returns {string} The object key part of the S3 URL.
+    */
     private string ExtractKeyFromUrl(string imageUrl)
     {
         var uri = new Uri(imageUrl);
