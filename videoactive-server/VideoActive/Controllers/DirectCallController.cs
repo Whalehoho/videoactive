@@ -13,8 +13,6 @@ namespace VideoActive.WebSocketHandlers
 {
     public class DirectCallHandler
     {
-        // private static readonly string _valkeyConnectionString;
-        // private static readonly ValkeyService _valkeyService;
         private static ApplicationDbContext _context;
 
         /**
@@ -28,14 +26,11 @@ namespace VideoActive.WebSocketHandlers
         }
 
         /**
-        * Static constructor to load configuration settings, like external services (currently commented out).
+        * Static constructor to load configuration settings.
         */
         static DirectCallHandler()
         {
             var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-            // _valkeyConnectionString = configuration.GetValue<string>("Valkey:ConnectionString");
-            // _valkeyService = new(_valkeyConnectionString);
-            
         }
         // Dictionary to track client contacts
         private static readonly Dictionary<string, List<string>> clientContacts = new()

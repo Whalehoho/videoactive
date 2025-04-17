@@ -223,7 +223,7 @@ export default function ConnectionPage() {
         .catch(error => {
             console.error("Error setting remote description: ", error);
         });
-        await processQueuedCandidates(); // Add ICE candidates that were stored earlier
+        await processQueuedCandidates(); // Process ICE candidates that were stored earlier
     };
     console.log("Answer signal data: ", answerData.signalData);
     handleAnswer(answerData.signalData);
@@ -337,7 +337,7 @@ export default function ConnectionPage() {
       await processQueuedCandidates(); // Add ICE candidates that were stored earlier
       await createAnswer();
 
-      // Log the call start
+      // Log the call start (store into database)
       // console.log("Client ID: ", clientId, " Target Client ID: ", targetClientId);
       await logStartCall(clientId, targetClientId, "direct");
 
