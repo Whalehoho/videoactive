@@ -93,7 +93,10 @@ public class UserController : ControllerBase
 
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "error", details = "No file uploaded" });
-
+        var allowedExtensions = new[] { ".png", ".jpeg", ".jpg" };
+        var fileExtension = Path.GetExtension(file.FileName).ToLower();
+        if (!allowedExtensions.Contains(fileExtension))
+            return BadRequest(new { message = "error", details = "Only PNG and JPEG files are allowed" });
         try
         {
             Console.WriteLine("Started uploading file");
