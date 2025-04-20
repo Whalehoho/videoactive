@@ -25,7 +25,7 @@ const WebSocketContext = createContext(null);
  * @param {ReactNode} children - Components wrapped by this provider
  */
 export const WebSocketProvider = ({ children }) => {
-  const pathname = usePathname(); // ✅ Get current path
+  const pathname = usePathname(); // Get current path
   const router = useRouter();
   const socketRef = useRef(null);
   const [authToken, setAuthToken] = useState(null);

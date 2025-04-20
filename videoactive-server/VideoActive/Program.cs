@@ -116,6 +116,7 @@ app.UseAuthorization();
 // WebSocket Support
 app.UseWebSockets();
 
+// ✅ WebSocket Middleware
 app.Use(async (context, next) =>
 {
     if (context.WebSockets.IsWebSocketRequest)

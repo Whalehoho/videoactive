@@ -232,14 +232,8 @@ export default function ConnectionPage() {
         pingIntervalRef.current = null;
       }
     }
-
     // Reset call status
     localStorage.setItem('callStatus', 'disconnected');
-    // Reload the page (hard reload), do this avoid all bugs=_=
-  // window.location.reload();
-
-  //print all related things to check if the peer connection is fully reset
-
   };
 
 /**
@@ -260,7 +254,7 @@ export default function ConnectionPage() {
       case 'signal':
         handleSignalingMessage(message);
         break;
-      case 'peer-disconnected': // Peer disconnected, hang up the call
+      case 'peer-disconnected':
         console.log("Peer disconnected.");
         hangUp();
         break;

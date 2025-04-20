@@ -95,3 +95,8 @@ docker ps
 
 Ensure Docker and Docker Compose are properly installed and configured on your EC2 instance.
 
+
+### Database Command
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+
