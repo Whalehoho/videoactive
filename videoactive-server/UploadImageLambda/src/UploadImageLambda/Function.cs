@@ -117,7 +117,7 @@ public class Function
             }
 
             // Upload the image to S3
-            string keyName = $"videoCall/user-images/{userId}/{Guid.NewGuid()}{extension}";
+            string keyName = $"videoCall/userImages/{userId}/{Guid.NewGuid()}{extension}";
 
             var uploadRequest = new TransferUtilityUploadRequest
             {
