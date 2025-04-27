@@ -44,6 +44,35 @@ NEXT_PUBLIC_BACKEND_WEBSOCKET_URL=ws://localhost:5000
 
 **Description**: Backend server built using ASP.NET Core MVC.
 
+### Create a MVC web app
+```bash
+dotnet new mvc -n ProjectName
+```
+
+### Manage Dependencies
+```bash
+// Install a NuGet package
+dotnet add package PackageName
+
+// Remove a NuGet package
+dotnet remove package PackageName
+
+// Download packages listed in .csproj
+dotnet restore
+```
+
+### Build and Run
+```bash
+// Compiles the project
+dotnet build
+
+// Run the project
+dotnet run
+
+// Prepare app for deployment
+dotnet publish -c Release -o ./publish
+```
+
 ### Setup Notes
 
 - **`Program.cs`** is configured for JWT and Google Authentication.
@@ -97,6 +126,8 @@ Ensure Docker and Docker Compose are properly installed and configured on your E
 
 
 ### Database Command
+```bash
 dotnet ef migrations add InitialCreate
 dotnet ef database update
+```
 
