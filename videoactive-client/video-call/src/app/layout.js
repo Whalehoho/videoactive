@@ -25,9 +25,36 @@ const geistMono = Geist_Mono({
  * Includes title, favicon, theme color, and PWA manifest file.
  */
 export const metadata = {
-  title: "ViMeet",
+  title: "ViMeet - Meet friends instantly, safely and virtually",
+  description: "Learn about ViMeet – a virtual meeting platform built to connect people instantly and meaningfully.",
+  keywords: ["VIMEET", "random call", "random virtual call", "virtual meetings", "about VIMEET", "video chat platform"],
+  robots: "index, follow",
+  verification: {
+    google: "Mw16fg7pQEwuKv03auvyZa_ond9EIIe1NzvsNHy3Wi4",
+  },
+  alternates: {
+    canonical: "https://videoactive.client.kc123.me/",
+  },
+  openGraph: {
+    title: "About ViMeet - Virtual Meet Platform",
+    description: "Learn about ViMeet – a virtual meeting platform built to connect people instantly and meaningfully.",
+    images: [
+      {
+        url: "https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/logos/logo.svg",
+      },
+    ],
+    url: "https://videoactive.client.kc123.me/",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About ViMeet - Virtual Meet Platform",
+    description: "Learn about ViMeet – a virtual meeting platform built to connect people instantly and meaningfully.",
+    images: [
+      "https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/logos/logo.svg",
+    ],
+  },
   icons: [
-    // Tab icon for browsers
     { rel: "icon", url: "https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/favicon.png" },
     { rel: "icon", type: "image/png", sizes: "96x96", url: "https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/favicon/favicon-96x96.png" },
     { rel: "apple-touch-icon", url: "https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/favicon/apple-touch-icon.png" },

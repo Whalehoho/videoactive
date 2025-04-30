@@ -120,6 +120,8 @@ docker-compose pull
 docker-compose up -d
 
 docker ps
+
+docker system prune -a --volumes
 ```
 
 Ensure Docker and Docker Compose are properly installed and configured on your EC2 instance.
