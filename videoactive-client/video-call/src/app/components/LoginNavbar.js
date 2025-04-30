@@ -20,9 +20,13 @@ export default function Navbar({ activePage }) {
       {/* Logo */}
       <div className="text-pink-600 text-xl font-bold flex items-center hover:bg-pink-200 rounded-lg px-1">
         <img src="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/logos/logo.svg" alt="logo" className="rounded-lg px-1 mx-2" />
-        ViMeet
+        <Link 
+              href="/"
+              className={`px-4 py-2 rounded-lg`}
+            >
+          ViMeet
+        </Link>
       </div>
-
       {/* Navigation Links */}
       <div className="space-x-4 flex items-center">
         <ul className="flex space-x-6">

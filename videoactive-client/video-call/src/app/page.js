@@ -1,6 +1,8 @@
 "use client";
 import NavbarSwitcher from "./components/NavbarSwitcher";
 import Link from "next/link";
+import Head from "next/head";
+
 /**
  * landing page page component of the ViMeet application.
  * Displays a hero section with background image and overlay text,
@@ -9,9 +11,29 @@ import Link from "next/link";
  * @component
  * @returns {JSX.Element} The rendered landing page layout.
  */
-export default function landing() {
+export default function Landing() {
   return (
     <div>
+        <Head>
+        <title>ViMeet - Meet friends instantly, safely and virtually</title>
+        <meta name="description" content="Learn about ViMeet – a virtual meeting platform built to connect people instantly and meaningfully." />
+        <meta name="keywords" content="VIMEET, random call, random virtual call, virtual meetings, about VIMEET, video chat platform" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://videoactive.client.kc123.me/" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="About ViMeet - Virtual Meet Platform" />
+        <meta property="og:description" content="Learn about ViMeet – a virtual meeting platform built to connect people instantly and meaningfully." />
+        <meta property="og:image" content="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/logos/logo.svg" />
+        <meta property="og:url" content="https://videoactive.client.kc123.me/" />
+        <meta property="og:type" content="website" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About ViMeet - Virtual Meet Platform" />
+        <meta name="twitter:description" content="Learn about ViMeet – a virtual meeting platform built to connect people instantly and meaningfully." />
+        <meta name="twitter:image" content="https://my-video-active-bucket.s3.ap-southeast-1.amazonaws.com/videoCall/public/logos/logo.svg" />
+      </Head>
       {/* <NavbarSwitcher /> */}
       <main className="text-center">
         {/* Hero Section with Text Overlay */}

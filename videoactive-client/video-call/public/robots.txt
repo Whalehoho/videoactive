@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://videoactive.client.kc123.me
+
+# Sitemaps
+Sitemap: https://videoactive.client.kc123.me/sitemap.xml
